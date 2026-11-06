@@ -40,7 +40,7 @@ export function startTerminal(root: HTMLElement): TerminalHandle {
   const screen = q<HTMLElement>("screen"), boot = q<HTMLElement>("boot"), dash = q<HTMLElement>("dash");
   const linesEl = q<HTMLElement>("lines"), probe = q<HTMLElement>("probe");
   const still = !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  const mine = new MineScene(q<HTMLCanvasElement>("mine"), still);
+  const mine = new MineScene(q<HTMLCanvasElement>("mine"), { still });
   drawBanner(q<SVGSVGElement>("banner"));
   let hex = "";
   for (let i = 0; i < 36; i++) hex += "0123456789abcdef"[(Math.random() * 16) | 0];

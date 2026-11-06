@@ -1,6 +1,6 @@
 /* The mine from the worker's dashboard (vibehash/minerui.py _band, termui.py rock): layered rock, a timbered tunnel
    lit by lanterns, rails, an ore cart and the drill, drawn on a canvas cell by cell. Shared by the hero's terminal
-   (terminal.ts, a replay) and the live strip at the top of every page (components/MineStrip.tsx). Over the terminal
+   (terminal.ts, a replay) and the live background behind every page (components/MineBackground.tsx). Over the terminal
    it adds smooth scrolling, spark and coin particles, lantern glow and rolling wheels. */
 
 type RGB = [number, number, number];
@@ -14,8 +14,7 @@ const ROCK = STRATA.map((s) => LIGHT.map((l) => SHADE.map((d) => rgb(s, l * d)))
 const TIMBER = "rgb(168,112,58)", LAMP: RGB = [255, 214, 120], RAIL = "rgb(150,152,165)", TIE = "rgb(110,86,62)", CART = "rgb(176,116,60)";
 const GOLD = "rgb(255,200,50)", TEXTC = "rgb(205,212,220)", DIMC = "rgb(125,135,148)", TUNNEL = "#0d0b0a";
 const SPARKS: RGB[] = [[255, 225, 130], [255, 160, 60], [255, 250, 225], [255, 110, 40]];
-export const BAND = 7;
-const TOP = 2, MID = 3, LOW = 4;
+export const BAND = 7; // the terminal's mine: 7 rows, the tunnel in rows 2-4 (minerui.BAND, TUNNEL)
 
 function noise(x: number, y: number): number {
   let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) >>> 0;
@@ -50,16 +49,27 @@ export class MineScene {
   private w = 0;
   private h = 0;
 
-  constructor(private canvas: HTMLCanvasElement, private still = false, private drillAt = 0.45) {
+  private still: boolean;
+  private drillAt: number;
+  /** Rows in all, and the tunnel's first row (it is 3 rows tall, with the beams in the row above). */
+  rows: number;
+  top: number;
+  /** 0-1: how much to darken the rock outside the tunnel, for a scene that sits behind text. */
+  private dim: number;
+
+  constructor(private canvas: HTMLCanvasElement, opts: { still?: boolean; drillAt?: number; rows?: number; top?: number; dim?: number } = {}) {
     this.ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+    this.still = !!opts.still; this.drillAt = opts.drillAt ?? 0.45;
+    this.rows = opts.rows ?? BAND; this.top = opts.top ?? 2; this.dim = opts.dim ?? 0;
   }
 
-  /** Size the scene: `cols` cells of `cw` x `lh` CSS pixels, BAND rows tall. */
-  resize(cols: number, cw: number, lh: number, fs: number) {
+  /** Size the scene: `cols` cells of `cw` x `lh` CSS pixels, `rows` tall (default: as made), the tunnel at `top`. */
+  resize(cols: number, cw: number, lh: number, fs: number, rows = this.rows, top = this.top) {
+    this.rows = rows; this.top = top;
     this.cols = cols; this.cw = cw; this.lh = lh; this.fs = fs;
     this.dx = Math.max(16, Math.floor(cols * this.drillAt));
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
-    this.w = cols * cw; this.h = BAND * lh;
+    this.w = cols * cw; this.h = this.rows * lh;
     this.canvas.style.width = this.w + "px"; this.canvas.style.height = this.h + "px";
     this.canvas.width = Math.round(this.w * this.dpr); this.canvas.height = Math.round(this.h * this.dpr);
   }
@@ -68,9 +78,12 @@ export class MineScene {
   celebrate(text: string, coins = true, color = GOLD) {
     this.popup = { t: this.clock, text, color };
     if (this.still || !coins) return;
-    const { dx, cw, lh } = this;
+    const { dx, cw, lh } = this, MID = this.top + 1;
     for (let i = 0; i < 14; i++) this.coins.push({ x: (dx + 0.5) * cw, y: MID * lh, vx: -40 - Math.random() * 170, vy: -170 - Math.random() * 150, t: 0, life: 2.4, ph: Math.random() * 6 });
   }
+
+  /** Nothing in flight (sparks, coins, a label): a still scene can be drawn a few times a second instead of every frame. */
+  quiet(): boolean { return !this.parts.length && !this.coins.length && !(this.popup && this.clock - this.popup.t < 2.5); }
 
   /** Move time on by `dt` seconds, then draw. */
   frame(dt: number, s: MineState) {
@@ -81,7 +94,7 @@ export class MineScene {
   }
 
   private step(dt: number, s: MineState) {
-    const { dx, cw, lh } = this;
+    const { dx, cw, lh } = this, MID = this.top + 1, LOW = this.top + 2;
     if (!this.still && s.busy) {
       let n = (s.speed > 6 ? 55 : 18) * dt;
       while (n > 0) {
@@ -108,7 +121,7 @@ export class MineScene {
   }
 
   private draw(s: MineState) {
-    const { ctx, cw, lh, cols, dx, still } = this;
+    const { ctx, cw, lh, cols, dx, still } = this, TOP = this.top, MID = TOP + 1, LOW = TOP + 2, ROWS = this.rows;
     const W = this.w, H = this.h;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
@@ -122,7 +135,7 @@ export class MineScene {
       const x = off + c, px = (c - frac) * cw;
       if (px > face) break;
       const ld = lampDist(x), lit = litBy(ld);
-      for (let r = 0; r < BAND; r++) {
+      for (let r = 0; r < ROWS; r++) {
         if (r >= TOP && r <= LOW) continue;
         if (r === TOP - 1 && (x % 12 === 11 || x % 12 === 0 || x % 12 === 1)) continue;
         const v = noise(x, r) % 100;
@@ -162,7 +175,7 @@ export class MineScene {
     for (let c = Math.max(0, dx - 1); c <= cols + 1; c++) {
       const x = off + c, px = (c - frac) * cw;
       if (px + cw < face) continue;
-      for (let r = 0; r < BAND; r++) {
+      for (let r = 0; r < ROWS; r++) {
         const v = noise(x, r) % 100;
         if (v < (r >= TOP && r <= LOW ? 4 : 1)) { this.diamond(px + cw / 2, r * lh + lh / 2, lh * 0.26, GOLD, 6); continue; }
         ctx.fillStyle = ROCK[layerAt(x, r)][1][v < 60 ? 0 : v < 88 ? 1 : 2];
@@ -175,6 +188,19 @@ export class MineScene {
       ctx.fillStyle = fg; ctx.fillRect(face, (TOP - 0.5) * lh, cw * 4, lh * 4);
     }
     ctx.restore();
+
+    if (this.dim > 0) {
+      // Behind text: the rock fades into the dark away from the tunnel, which stays lit.
+      const a = this.dim, t0 = (TOP - 1) * lh, t1 = (LOW + 1) * lh, edge = lh * 3;
+      const up = ctx.createLinearGradient(0, t0 - edge, 0, t0);
+      up.addColorStop(0, `rgba(11,10,9,${a})`); up.addColorStop(1, `rgba(11,10,9,${a * 0.35})`);
+      ctx.fillStyle = `rgba(11,10,9,${a})`; ctx.fillRect(0, 0, W, Math.max(0, t0 - edge));
+      ctx.fillStyle = up; ctx.fillRect(0, t0 - edge, W, edge);
+      const down = ctx.createLinearGradient(0, t1, 0, t1 + edge);
+      down.addColorStop(0, `rgba(11,10,9,${a * 0.35})`); down.addColorStop(1, `rgba(11,10,9,${a})`);
+      ctx.fillStyle = down; ctx.fillRect(0, t1, W, edge);
+      ctx.fillStyle = `rgba(11,10,9,${a})`; ctx.fillRect(0, t1 + edge, W, H - t1 - edge);
+    }
 
     // The ore cart: one nugget per unit committed, on wheels that roll with the tunnel.
     const cx = dx - 13;
@@ -238,10 +264,11 @@ export class MineScene {
       const label = " " + pop.text + " ", age = this.clock - pop.t;
       const lx = Math.max(0, (dx - Math.floor(label.length / 2)) * cw), rise = still ? 1 : Math.min(1, age * 4);
       ctx.save(); ctx.globalAlpha = Math.min(1, (2.5 - age) / 0.5);
-      ctx.fillStyle = "#0a0908"; ctx.fillRect(lx, 0, label.length * cw, lh);
+      const py = Math.max(0, TOP - 2) * lh;
+      ctx.fillStyle = "#0a0908"; ctx.fillRect(lx, py, label.length * cw, lh);
       ctx.font = `700 ${this.fs}px 'JetBrains Mono', Consolas, monospace`; ctx.textBaseline = "middle";
       ctx.fillStyle = pop.color; ctx.shadowColor = pop.color; ctx.shadowBlur = 10;
-      ctx.fillText(label, lx, lh * 0.5 + (1 - rise) * 6); ctx.restore();
+      ctx.fillText(label, lx, py + lh * 0.5 + (1 - rise) * 6); ctx.restore();
     }
   }
 }

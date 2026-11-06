@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useLive } from "../lib/node";
 import { int } from "../lib/format";
-import { MineStrip } from "./MineStrip";
+import { MineBackground } from "./MineBackground";
 
 export const REPO = "https://github.com/AlphaChad5000/vibehash";
 export const DOCS = REPO + "/blob/main/docs/CLI.md";
@@ -127,7 +127,7 @@ export function Layout({ children, hero }: { children: ReactNode; hero?: ReactNo
   return (
     <>
       <TestnetBar />
-      <MineStrip />
+      <MineBackground />
       <header className="relative glow-bg">
         <div className="absolute inset-0 grid-bg pointer-events-none" aria-hidden="true" />
         <div className="relative max-w-6xl mx-auto px-4 md:px-8">
