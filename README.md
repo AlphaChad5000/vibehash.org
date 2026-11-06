@@ -48,9 +48,12 @@ npm run types          # after changing wrangler.jsonc: regenerates worker-confi
 
 - Preview: https://vibehash-web.vibe-hash.workers.dev (the Cache API does nothing on workers.dev, so `/api` isn't
   cached there; it is on the real domain)
-- Production: add the `routes` shown in `wrangler.jsonc` and deploy. vibehash.org's DNS is already on Cloudflare.
-- Deploy on push: in the Cloudflare dashboard, Workers & Pages → vibehash-web → Settings → Builds → connect this
-  repository (build command `npm run build`, deploy command `npx wrangler deploy`).
+- Production: vibehash.org and www.vibehash.org, the custom domains in `wrangler.jsonc`.
+- Deploy on push: Workers Builds is connected to this repository. A push to `main` builds (`npm run build`, Node
+  version from `.node-version`) and deploys (`npx wrangler deploy`); other branches get a preview URL. Build logs:
+  dashboard → Workers & Pages → vibehash-web → Deployments. `npm run deploy` still works for a deploy by hand.
+- Analytics: Cloudflare Web Analytics, automatic setup. Cloudflare adds its beacon to every HTML page at the edge
+  (cookie-free; app navigation counts too), so there's nothing for it in the code.
 
 `.gitattributes` keeps Unix line endings on every checkout: `curl -fsSL https://vibehash.org/install.sh | sh` breaks
 on a script with Windows line endings, and Wrangler uploads the files as they are on disk.
