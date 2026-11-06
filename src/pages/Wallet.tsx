@@ -78,7 +78,7 @@ export default function Wallet() {
                     <span key={h + ":" + amt} className="block">{vibe(amt)}, spendable at block #{int(h)}{net ? (net.height >= h ? " (now)" : ` (in ${int(h - net.height)} blocks)`) : ""}</span>
                   )) : "nothing"}</dd>
                   <dt className="text-mute">Today</dt>
-                  <dd className="m-0">{rank >= 0 ? `#${rank + 1} by work, ${flopParts(top[rank].flops).join(" ")} trained` : "not among today's top miners"}</dd>
+                  <dd className="m-0">{rank >= 0 ? `#${rank + 1} by work, ${flopParts(top[rank].flops).join(" ")} trained` : "not among today's top miners"} · <Link className={linkCls} to="/miners">leaderboard</Link></dd>
                 </dl>
               </div>
               <div className="grid gap-3 content-start">

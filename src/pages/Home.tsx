@@ -85,7 +85,7 @@ export default function Home() {
   const blockTime = net?.miners.block_time ? Math.round(net.miners.block_time) : 40;
   return (
     <Layout hero={<Hero />}>
-      <section className="border-y border-rule bg-ink2/60" aria-labelledby="live-title">
+      <section aria-labelledby="live-title">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-10">
           <div className="flex flex-wrap items-baseline justify-between gap-2 mb-6">
             <h2 id="live-title" className="font-mono text-[0.75rem] font-semibold tracking-[0.08em] uppercase text-mute">The testnet right now</h2>

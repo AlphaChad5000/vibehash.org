@@ -9,6 +9,8 @@ export default defineConfig({
   build: { outDir: "dist", sourcemap: true },
   server: {
     proxy: {
+      // The leaderboard is the Worker's own (worker/leaderboard.ts), not the node's: read the live site's.
+      "/api/leaderboard": { target: "https://vibehash.org", changeOrigin: true },
       "/api": { target: "https://node.vibehash.org", changeOrigin: true, rewrite: (p) => p.replace(/^\/api/, "") }
     }
   }

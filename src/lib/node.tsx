@@ -18,6 +18,11 @@ export interface Network {
     top_miners: { address: string; flops: number; units?: number }[]; block_time: number;
   };
   jobs: Job[];
+  // What kinds of machines registered lately, counted only (netstats.census): no addresses.
+  hardware?: {
+    online: number; day: number; reported: number; vendors: Record<string, number>;
+    classes: { label: string; vendor: string; arch: string; memory_gb: number; online: number; day: number }[];
+  };
 }
 export interface Status {
   chain_id: string; height: number; phase: string; phase_ends: number; round: number; job_id: string | null;
@@ -35,8 +40,8 @@ export interface JobDetail {
   model: { height: number; bytes: number; sha256: string | null };
 }
 
-export async function get<T>(path: string): Promise<T> {
-  const r = await fetch(NODE + path, { cache: "no-store" });
+export async function get<T>(path: string, base = NODE): Promise<T> {
+  const r = await fetch(base + path, { cache: "no-store" });
   if (!r.ok) throw new Error(r.status === 404 ? "not found" : "the node answered " + r.status);
   return r.json() as Promise<T>;
 }
@@ -65,19 +70,20 @@ export function LiveProvider({ children }: { children: ReactNode }) {
 }
 export const useLive = () => useContext(LiveContext);
 
-/** One GET, read again every `every` ms (0: once), with its loading and error state. */
-export function useNode<T>(path: string | null, every = 0) {
+/** One GET, read again every `every` ms (0: once), with its loading and error state. `base`: NODE, or "/api" for
+    what only the site's Worker answers (the leaderboard). */
+export function useNode<T>(path: string | null, every = 0, base = NODE) {
   const [state, set] = useState<{ data: T | null; error: string | null; loading: boolean }>({ data: null, error: null, loading: !!path });
   useEffect(() => {
     if (!path) { set({ data: null, error: null, loading: false }); return; }
     let gone = false;
     set((s) => ({ ...s, loading: true, error: null }));
-    const load = () => get<T>(path)
+    const load = () => get<T>(path, base)
       .then((data) => { if (!gone) set({ data, error: null, loading: false }); })
       .catch((e: Error) => { if (!gone) set((s) => ({ data: s.data, error: e.message, loading: false })); });
     load();
     const timer = every ? setInterval(() => { if (!document.hidden) load(); }, every) : 0;
     return () => { gone = true; if (timer) clearInterval(timer); };
-  }, [path, every]);
+  }, [path, every, base]);
   return state;
 }

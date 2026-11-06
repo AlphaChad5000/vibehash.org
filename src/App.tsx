@@ -5,11 +5,12 @@ import { Layout, OSProvider, PageHead, linkCls } from "./components/Layout";
 import Home from "./pages/Home";
 import Wallet from "./pages/Wallet";
 import Submit from "./pages/Submit";
+import Miners from "./pages/Miners";
 import { JobPage, Jobs } from "./pages/Jobs";
 
 function titleFor(path: string): string {
   const job = /^\/jobs\/(.+)$/.exec(path);
-  const name = job ? decodeURIComponent(job[1]) : ({ "/wallet": "Wallet", "/submit": "Submit a job", "/jobs": "Jobs" } as Record<string, string>)[path];
+  const name = job ? decodeURIComponent(job[1]) : ({ "/wallet": "Wallet", "/submit": "Submit a job", "/jobs": "Jobs", "/miners": "Miners" } as Record<string, string>)[path];
   return name ? name + " · Vibe Hash testnet" : "Vibe Hash: mining that trains real AI models (testnet)";
 }
 function Title() {
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/submit" element={<Submit />} />
             <Route path="/jobs" element={<Jobs />} />
+            <Route path="/miners" element={<Miners />} />
             <Route path="/jobs/:id" element={<JobPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

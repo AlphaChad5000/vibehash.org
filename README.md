@@ -52,6 +52,10 @@ npm run types          # after changing wrangler.jsonc: regenerates worker-confi
 - Deploy on push: Workers Builds is connected to this repository. A push to `main` builds (`npm run build`, Node
   version from `.node-version`) and deploys (`npx wrangler deploy`); other branches get a preview URL. Build logs:
   dashboard → Workers & Pages → vibehash-web → Deployments. `npm run deploy` still works for a deploy by hand.
+- Miner leaderboard (`/miners`): `worker/leaderboard.ts`. A cron trigger every 2 minutes reads new blocks from the
+  node's `/blocks` and keeps 7 days of hourly per-address totals (reward pay for work and checks, FLOPs, rounds,
+  slashes) in the `LEADERBOARD` KV namespace; `GET /api/leaderboard?window=day|week` reads them. To rebuild from
+  scratch, delete the `state:v1` key: the next runs read the chain again, 300 blocks at a time.
 - Analytics: Cloudflare Web Analytics, automatic setup. Cloudflare adds its beacon to every HTML page at the edge
   (cookie-free; app navigation counts too), so there's nothing for it in the code.
 

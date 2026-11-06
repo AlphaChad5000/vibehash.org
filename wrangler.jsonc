@@ -1,5 +1,6 @@
 // The site on Cloudflare Workers: dist/ (the React build, plus public/: the guide, /network/, the installers, the
-// whitepaper) served as static assets, and worker/index.ts in front of /api/* only. Deploy: `npm run deploy`.
+// whitepaper) served as static assets, and worker/index.ts in front of /api/* only. Deploys on push to main
+// (Workers Builds), or `npm run deploy`.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vibehash-web",
@@ -17,6 +18,10 @@
   "vars": {
     "NODE": "https://node.vibehash.org"
   },
+  // The miner leaderboard (worker/leaderboard.ts): every 2 minutes the Worker reads the blocks it hasn't seen from
+  // the node and adds who earned what to hourly totals, kept for 7 days in one KV value; /api/leaderboard reads it.
+  "kv_namespaces": [{ "binding": "LEADERBOARD", "id": "b9d519771eb84a9ba57c18a911458d8d" }],
+  "triggers": { "crons": ["*/2 * * * *"] },
   "observability": { "enabled": true },
   // Keep the workers.dev address and per-version preview URLs alongside the real domain.
   "workers_dev": true,

@@ -66,6 +66,7 @@ function Nav() {
       </Link>
       <div className="flex items-center gap-4 sm:gap-5 text-[0.95rem]">
         <NavLink className={item} to="/jobs">Jobs</NavLink>
+        <NavLink className={item} to="/miners">Miners</NavLink>
         <NavLink className={item} to="/submit">Submit</NavLink>
         <NavLink className={item} to="/wallet">Wallet</NavLink>
         <a className="hidden md:inline text-mute hover:text-fg" href="/guide/">Guide</a>
