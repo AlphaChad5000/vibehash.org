@@ -17,8 +17,14 @@
   "vars": {
     "NODE": "https://node.vibehash.org"
   },
-  "observability": { "enabled": true }
-  // Production: once you're ready to switch vibehash.org over from GitHub Pages, add
-  //   "routes": [{ "pattern": "vibehash.org", "custom_domain": true }, { "pattern": "www.vibehash.org", "custom_domain": true }]
-  // and deploy. Until then it serves on its workers.dev address only.
+  "observability": { "enabled": true },
+  // Keep the workers.dev address and per-version preview URLs alongside the real domain.
+  "workers_dev": true,
+  "preview_urls": true,
+  // vibehash.org and www, as custom domains: Cloudflare keeps their DNS records and certificates. node.vibehash.org
+  // is a separate record (the testnet node) and isn't touched. The workers.dev address keeps working as a preview.
+  "routes": [
+    { "pattern": "vibehash.org", "custom_domain": true },
+    { "pattern": "www.vibehash.org", "custom_domain": true }
+  ]
 }
