@@ -1,1239 +1,870 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="bg-ink">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vibe Hash: mining that trains real AI models</title>
-<meta name="description" content="Vibe Hash is a proof-of-useful-work test network: computers earn VIBE by training small, checkable pieces of AI models instead of hashing. See who's mining and what's training right now.">
+<title>Vibe Hash: mining that trains real AI models (testnet)</title>
+<meta name="description" content="Vibe Hash is a proof-of-useful-work test network: computers earn test VIBE by training small, checkable pieces of AI models instead of hashing. Join as a miner or submit a training job.">
 <link rel="canonical" href="https://vibehash.org/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://vibehash.org/">
 <meta property="og:title" content="Vibe Hash: mining that trains real AI models">
-<meta property="og:description" content="Gaming PCs earn VIBE by training checkable pieces of AI models instead of hashing. Right now they're teaching DeepSeek V4.1 Flash to think shorter, in pieces small enough that nobody holds the whole model.">
+<meta property="og:description" content="Gaming PCs earn test VIBE by training checkable pieces of AI models instead of hashing. Join the testnet as a miner, or submit a job for it to train.">
 <meta property="og:image" content="https://vibehash.org/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Vibe Hash: mining that trains real AI models. Now training DeepSeek V4.1 Flash to think shorter.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 4'%3E%3Cpath fill='%23f1b23c' d='M0 0h1v3H0zM2 0h1v3H2zM1 3h1v1H1z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=JetBrains+Mono:wght@400;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: "#0b0a09", ink2: "#151311", rule: "#2b2824", fg: "#eeebe6", mute: "#a39c93", dim: "#7d8794",
+          signal: "#f1b23c", good: "#3fb950", violet: "#b46eff", pink: "#ff5f96", orange: "#ff9646"
+        },
+        fontFamily: {
+          display: ["Archivo", '"Helvetica Neue"', "Arial", "sans-serif"],
+          sans: ['"Source Sans 3"', "Segoe UI", "system-ui", "sans-serif"],
+          mono: ['"JetBrains Mono"', '"Cascadia Mono"', "Consolas", "ui-monospace", "monospace"]
+        }
+      }
+    }
+  };
+</script>
 <style>
-/* The front page: a dark band with the pitch and the install line, then the network as it is right now (read from the
-   node every 30 seconds), then three steps and what's next. Everything else lives in the guide. */
-:root {
-  --paper: #ffffff; --stone: #f4f3f0; --ink: #1d1b19; --ink-2: #5b554e; --rule: #e3dfd9;
-  --gold: #995a05; --gold-wash: #f6ead5; --good: #2c7836; --good-wash: #e2f0e3; --bad: #b3261e;
-  --band: #151311; --band-ink: #eeebe6; --band-ink-2: #a39c93; --band-rule: #2b2824; --term: #0c0b0a;
-  --signal: #f1b23c; --on-signal: #1d1406;
-  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #121110; --stone: #1b1917; --ink: #ebe7e1; --ink-2: #a9a299; --rule: #2d2a26;
-    --gold: #efb041; --gold-wash: #322510; --good: #80cf88; --good-wash: #15301a; --bad: #f28b7d;
-    --band: #0b0a09; --band-rule: #25221f; --term: #070606; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper: #121110; --stone: #1b1917; --ink: #ebe7e1; --ink-2: #a9a299; --rule: #2d2a26;
-  --gold: #efb041; --gold-wash: #322510; --good: #80cf88; --good-wash: #15301a; --bad: #f28b7d;
-  --band: #0b0a09; --band-rule: #25221f; --term: #070606; color-scheme: dark;
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 var(--font-body); -webkit-font-smoothing: antialiased; }
-.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; }
-@media (min-width: 720px) { .wrap { padding-inline: 32px; } }
-h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
-h2 { font-size: 1.7rem; font-weight: 700; font-stretch: 108%; letter-spacing: -0.015em; line-height: 1.15; }
-h3 { font-size: 1.1rem; font-weight: 650; font-stretch: 104%; }
-p { margin: 0; }
-a { color: var(--gold); text-underline-offset: 3px; }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 3px; }
-.num { font-variant-numeric: tabular-nums; }
-.quiet { color: var(--ink-2); }
+  /* What Tailwind's utilities don't cover: the brand gradient, the glass terminal and its dashboard (a port of the
+     worker's minerui.py), and focus rings. */
+  :root { --grad: linear-gradient(90deg, #ffcd3c, #ff9646 35%, #ff5f96 68%, #b46eff); color-scheme: dark; }
+  body { background: #0b0a09; }
+  .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .grad-line { background: var(--grad); }
+  .glow-bg { background: radial-gradient(50% 60% at 78% 30%, rgb(180 110 255 / 0.13), transparent 70%), radial-gradient(40% 50% at 60% 10%, rgb(255 150 70 / 0.08), transparent 70%), radial-gradient(30% 40% at 10% 0%, rgb(255 205 60 / 0.05), transparent 70%); }
+  .grid-bg { background-image: linear-gradient(rgb(255 255 255 / 0.025) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.025) 1px, transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(70% 60% at 50% 30%, #000, transparent); mask-image: radial-gradient(70% 60% at 50% 30%, #000, transparent); }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid #f1b23c; outline-offset: 2px; border-radius: 4px; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: #5a544c #0b0a09; }
 
-.band { background: var(--band); color: var(--band-ink); }
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 16px; border-bottom: 1px solid var(--band-rule); }
-.brand { display: flex; align-items: center; gap: 10px; color: var(--band-ink); text-decoration: none; }
-.brand svg { width: 15px; height: 20px; color: var(--signal); }
-.brand b { font: 720 1.12rem var(--font-display); font-stretch: 115%; }
-.tag { font: 500 0.7rem var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--band-ink-2); border: 1px solid var(--band-rule); border-radius: 4px; padding: 2px 7px; }
-.topnav { display: flex; gap: 22px; }
-.topnav a { color: var(--band-ink-2); text-decoration: none; }
-.topnav a:hover { color: var(--band-ink); }
-@media (max-width: 560px) { .topnav a.optional { display: none; } .tag { display: none; } }
+  .glass { position: relative; background: linear-gradient(180deg, rgb(22 20 18 / 0.72), rgb(10 9 8 / 0.82)); border: 1px solid rgb(255 255 255 / 0.09); border-radius: 14px;
+    -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 50px 100px -40px rgb(0 0 0 / 0.95), 0 0 140px -50px rgb(180 110 255 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.06); overflow: hidden; }
+  .glass::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--grad); opacity: 0.8; }
+  .lights i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+  .lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
 
-.hero-wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; align-items: center; padding-block: 56px 64px; }
-@media (min-width: 980px) { .hero-wrap { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 56px; } }
-.hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; max-width: 46rem; }
-.model { margin: 0; border: 1px solid var(--band-rule); border-radius: 16px; background: var(--term); padding: 22px; display: grid; gap: 14px; }
-.model-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 0.9rem; color: var(--band-ink-2); }
-.model-head b { color: var(--band-ink); font: 700 1rem var(--font-display); }
-.bars { display: grid; grid-template-columns: repeat(40, minmax(0, 1fr)); gap: 3px; height: 120px; align-items: end; }
-.bars i { position: relative; height: 100%; border-radius: 3px; background: var(--band-rule); overflow: hidden; }
-.bars i::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: var(--signal); transform-origin: bottom; transform: scaleY(0.08); animation: fill 6s ease-in-out infinite; animation-delay: calc(var(--n) * 0.09s); }
-.bars i.top { background: #15301a; box-shadow: inset 0 0 0 1px #80cf88; }
-.bars i.top::after { background: #3fb950; opacity: 0.55; animation-name: pulse-top; }
-@keyframes fill { 0%, 8% { transform: scaleY(0.08); } 45%, 80% { transform: scaleY(1); } 100% { transform: scaleY(0.08); } }
-@keyframes pulse-top { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
-.model-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.85rem; color: var(--band-ink-2); }
-.model-key span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--signal); }
-.model-key span.k-top::before { background: #3fb950; }
-.model p { font-size: 0.92rem; color: var(--band-ink-2); }
-.pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-block: 0 8px; }
-@media (max-width: 860px) { .pillars { grid-template-columns: minmax(0, 1fr); } }
-.pillar { border-top: 2px solid var(--signal); padding-top: 14px; display: grid; gap: 6px; }
-.pillar h3 { font-size: 1.05rem; }
-.pillar p { color: var(--ink-2); font-size: 0.95rem; }
-.faq { display: grid; gap: 10px; margin-top: 22px; max-width: 52rem; }
-.faq details { border: 1px solid var(--rule); border-radius: 10px; padding: 14px 18px; }
-.faq summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary::after { content: "+"; color: var(--gold); font-weight: 700; }
-.faq details[open] summary::after { content: "–"; }
-.faq details p { margin-top: 10px; color: var(--ink-2); }
-footer .cols { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; align-items: baseline; }
-footer .mark { display: inline-flex; align-items: center; gap: 8px; font: 700 1rem var(--font-display); color: var(--ink); }
-footer .mark svg { width: 12px; height: 16px; color: var(--signal); }
-@media (prefers-reduced-motion: reduce) { .bars i::after { animation: none; transform: scaleY(1); } }
-.hero h1 { font-size: clamp(2.3rem, 6vw, 3.9rem); font-weight: 770; font-stretch: 110%; line-height: 1.02; letter-spacing: -0.03em; }
-.hero h1 em { font-style: normal; color: var(--signal); }
-.now { justify-self: start; display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 6px 14px; border: 1px solid var(--band-rule); border-radius: 99px; background: var(--term); color: var(--band-ink); text-decoration: none; font-size: 0.95rem; }
-.now:hover { border-color: var(--signal); }
-.now .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #3fb950; }
-.lede { font-size: 1.2rem; color: var(--band-ink-2); max-width: 38rem; }
-.install { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; max-width: 40rem; }
-.os { display: flex; gap: 4px; }
-.os button { font: 600 0.85rem var(--font-body); color: var(--band-ink-2); background: none; border: 1px solid transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-.os button[aria-pressed="true"] { color: var(--band-ink); border-color: var(--band-rule); background: var(--term); }
-.runline { display: flex; align-items: center; gap: 12px; background: var(--term); border: 1px solid var(--band-rule); border-radius: 8px; padding: 8px 8px 8px 16px; }
-.runline code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 0.92rem var(--font-mono); color: var(--band-ink); scrollbar-width: none; }
-.runline code::before { content: "> "; color: var(--signal); }
-.copy { flex: none; font: 700 0.9rem var(--font-body); background: var(--signal); color: var(--on-signal); border: 0; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
-.install p { font-size: 0.95rem; color: var(--band-ink-2); }
-.install p a { color: var(--band-ink); }
-
-section { padding-block: 64px 8px; }
-.head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 24px; }
-.live { display: inline-flex; align-items: center; gap: 8px; font-size: 0.92rem; color: var(--ink-2); }
-.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-2); }
-.live.on .dot { background: #3fb950; box-shadow: 0 0 0 0 rgb(63 185 80 / 0.5); animation: pulse 2s infinite; }
-@keyframes pulse { 70% { box-shadow: 0 0 0 8px rgb(63 185 80 / 0); } 100% { box-shadow: 0 0 0 0 rgb(63 185 80 / 0); } }
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
-@media (max-width: 860px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-.stat { background: var(--paper); padding: 20px 22px; display: grid; gap: 2px; align-content: start; }
-.stat dt { font-size: 0.9rem; color: var(--ink-2); }
-.stat dd { margin: 0; font: 720 2.2rem/1.15 var(--font-display); font-stretch: 105%; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.stat small { font-size: 0.9rem; color: var(--ink-2); }
-.stat dd span { font-size: 1.1rem; font-weight: 600; margin-left: 6px; color: var(--ink-2); letter-spacing: 0; }
-.callout { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; background: var(--gold-wash); border-radius: 10px; padding: 14px 18px; }
-.callout a { font-weight: 700; }
-.callout.deepseek { margin-top: 28px; max-width: 46rem; display: block; }
-.callout.deepseek h3 { margin-bottom: 4px; }
-.callout.deepseek p { color: var(--ink-2); }
-
-.jobs { display: grid; gap: 16px; margin-top: 28px; }
-.job { border: 1px solid var(--rule); border-radius: 12px; padding: 22px; display: grid; grid-template-columns: 1fr minmax(0, 300px); gap: 12px 32px; align-items: center; }
-@media (max-width: 760px) { .job { grid-template-columns: 1fr; } }
-.job-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.job h3 { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 600; }
-.pill { font: 600 0.8rem var(--font-body); border-radius: 99px; padding: 2px 10px; background: var(--stone); color: var(--ink-2); }
-.pill.training { background: var(--good-wash); color: var(--good); }
-.pill.waiting { background: var(--gold-wash); color: var(--gold); }
-.metric { font: 720 1.9rem/1.1 var(--font-display); font-variant-numeric: tabular-nums; margin-top: 10px; }
-.metric span { font: 400 1rem var(--font-body); color: var(--ink-2); }
-.facts { margin-top: 6px; font-size: 0.95rem; color: var(--ink-2); }
-.spark { width: 100%; height: 84px; display: block; }
-.spark-cap { font-size: 0.82rem; color: var(--ink-2); display: flex; justify-content: space-between; }
-
-.feat { margin-top: 28px; border: 1px solid var(--rule); border-radius: 16px; padding: 24px; display: grid; gap: 20px; }
-.feat-eyebrow { font: 600 0.78rem var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
-.feat h3 { font-size: 1.5rem; }
-.feat-head { display: grid; gap: 8px; max-width: 48rem; }
-.stages { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.stages li { font-size: 0.85rem; padding: 3px 12px; border-radius: 99px; background: var(--stone); color: var(--ink-2); }
-.stages li.past { color: var(--good); }
-.stages li.now { background: var(--gold-wash); color: var(--gold); font-weight: 700; }
-.feat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 760px) { .feat-grid { grid-template-columns: minmax(0, 1fr); } }
-.panel { background: var(--stone); border-radius: 12px; padding: 18px 20px; display: grid; gap: 10px; align-content: start; }
-.panel h4, .chat h4 { margin: 0; font: 600 0.9rem var(--font-body); color: var(--ink-2); }
-.big { font: 760 2.6rem/1 var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.layers { display: grid; grid-template-columns: repeat(40, minmax(0, 1fr)); gap: 2px; height: 42px; }
-@media (max-width: 560px) { .layers { grid-template-columns: repeat(20, minmax(0, 1fr)); height: 70px; } }
-.layers i { position: relative; background: var(--rule); border-radius: 2px; overflow: hidden; }
-.layers i b { position: absolute; left: 0; right: 0; bottom: 0; background: var(--signal); }
-.layers i.top { background: var(--good-wash); box-shadow: inset 0 0 0 1px var(--good); }
-.layer-cap { display: flex; justify-content: space-between; gap: 12px; font-size: 0.82rem; color: var(--ink-2); }
-.progress { height: 10px; background: var(--rule); border-radius: 5px; overflow: hidden; }
-.progress i { display: block; height: 100%; background: var(--signal); }
-.chat { display: grid; gap: 10px; }
-.bubble { border-radius: 12px; padding: 10px 14px; max-width: 42rem; }
-.bubble.q { justify-self: end; background: var(--stone); }
-.bubble.a { border: 1px solid var(--rule); }
-.think { margin: 0 0 8px; border-left: 3px solid var(--signal); padding: 2px 12px; color: var(--ink-2); font-size: 0.95rem; }
-.think b { display: block; font: 600 0.75rem var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
-.source { font-size: 0.8rem; color: var(--ink-2); }
-.miners { margin-top: 28px; }
-.miners ol { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
-.miners li { display: grid; grid-template-columns: 1.4rem auto minmax(40px, 1fr) auto; gap: 12px; align-items: center; font-size: 0.95rem; }
-.miners code { font-family: var(--font-mono); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; }
-.bar { height: 8px; border-radius: 4px; background: var(--stone); overflow: hidden; }
-.bar i { display: block; height: 100%; background: var(--signal); }
-
-.setup { list-style: none; counter-reset: s; margin: 24px 0 0; padding: 0; display: grid; gap: 22px; max-width: 46rem; }
-.setup > li { counter-increment: s; display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); column-gap: 14px; }
-.setup > li::before { content: counter(s); grid-row: span 3; width: 2.2rem; height: 2.2rem; border-radius: 50%; display: grid; place-items: center; background: var(--gold-wash); color: var(--gold); font: 720 0.95rem var(--font-mono); }
-.setup p, .setup dd { color: var(--ink-2); }
-.setup h3 { line-height: 2.2rem; }
-.setup dl { margin: 4px 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; }
-.setup dt { font-weight: 700; }
-.setup dd { margin: 0; }
-.setup strong { color: var(--ink); }
-@media (max-width: 560px) { .setup dl { grid-template-columns: minmax(0, 1fr); gap: 0; } .setup dd { margin-bottom: 8px; } }
-code, kbd { font-family: var(--font-mono); font-size: 0.86em; }
-:not(pre) > code, kbd { background: var(--stone); border: 1px solid var(--rule); padding: 0.04em 0.34em; border-radius: 4px; overflow-wrap: anywhere; }
-.runline code { background: none; border: 0; padding: 0; }
-.handy { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px 24px; max-width: 46rem; }
-.handy p { display: grid; gap: 2px; }
-.handy span { color: var(--ink-2); font-size: 0.92rem; }
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
-@media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
-.step { background: var(--stone); border-radius: 12px; padding: 22px; display: grid; gap: 8px; align-content: start; }
-.step b { font: 720 0.85rem var(--font-mono); color: var(--gold); }
-.step p { color: var(--ink-2); }
-.next { display: grid; gap: 12px; margin-top: 20px; max-width: 46rem; }
-.next li { margin-bottom: 6px; }
-.next ul { margin: 0; padding-left: 1.2em; color: var(--ink-2); }
-.next strong { color: var(--ink); }
-
-footer { margin-top: 72px; border-top: 1px solid var(--rule); }
-footer .wrap { padding-block: 24px 40px; display: grid; gap: 10px; font-size: 0.9rem; color: var(--ink-2); }
-footer nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
-.fine { font-size: 0.8rem; }
-@media (prefers-reduced-motion: reduce) { .live.on .dot { animation: none; } }
-/* Editorial pass: hairlines, type and space instead of boxed cards, pills and tinted panels. */
-main section { border-top: 1px solid var(--rule); margin-top: 72px; padding-top: 28px; }
-main section:first-child { border-top: 0; margin-top: 0; }
-main { counter-reset: sec; }
-main section > h2, main section > .head > h2 { counter-increment: sec; }
-main section > h2::before, main section > .head > h2::before { content: counter(sec, decimal-leading-zero); display: block; font: 600 0.78rem var(--font-mono); letter-spacing: 0.08em; color: var(--gold); margin-bottom: 10px; }
-.stats { background: none; border: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); border-radius: 0; gap: 0; }
-.stat { background: none; padding: 22px 24px; }
-.stat:first-child { padding-left: 0; }
-.stat + .stat { border-left: 1px solid var(--rule); }
-@media (max-width: 860px) {
-  .stat { padding: 18px 16px 18px 0; }
-  .stat + .stat { border-left: 0; }
-  .stat:nth-child(even) { border-left: 1px solid var(--rule); padding-left: 16px; }
-  .stat:nth-child(n+3) { border-top: 1px solid var(--rule); }
-}
-.callout { background: none; border-radius: 0; border-left: 2px solid var(--signal); padding: 2px 0 2px 16px; margin-top: 20px; }
-.callout.deepseek { padding: 2px 0 2px 16px; }
-.job, .feat { border: 0; border-radius: 0; border-top: 1px solid var(--rule); padding: 26px 0 0; }
-.jobs { gap: 28px; }
-.panel { background: none; border-radius: 0; padding: 14px 0 0; border-top: 1px solid var(--rule); }
-.pill { background: none !important; border-radius: 0; padding: 0; font: 600 0.74rem var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; }
-.pill::before { content: "\25CF\00A0"; }
-.stages { gap: 4px 0; }
-.stages li { background: none !important; border-radius: 0; padding: 0; font-size: 0.85rem; }
-.stages li + li::before { content: "\00A0\00A0\2192\00A0\00A0"; color: var(--ink-2); font-weight: 400; }
-.bubble { border-radius: 0; padding: 4px 0 4px 14px; }
-.bubble.q { justify-self: start; background: none; border-left: 2px solid var(--rule); }
-.bubble.a { border: 0; border-left: 2px solid var(--signal); }
-.steps { gap: 0 32px; }
-.step { background: none; border-radius: 0; padding: 16px 0 0; border-top: 1px solid var(--rule); }
-.step b { font-size: 1.6rem; color: var(--gold); }
-.setup > li::before { background: none; border-radius: 0; width: auto; height: auto; place-items: start; font: 700 1.35rem/2.2rem var(--font-display); }
-.faq { gap: 0; border-top: 1px solid var(--rule); }
-.faq details { border: 0; border-radius: 0; border-bottom: 1px solid var(--rule); padding: 16px 0; }
-.handy code { background: none; border: 0; padding: 0; color: var(--ink); }
-:not(pre) > code, kbd { border-radius: 2px; }
-.runline { border-radius: 2px; }
-.copy { background: none; color: var(--signal); border: 1px solid var(--band-rule); border-radius: 2px; font: 600 0.82rem var(--font-mono); letter-spacing: 0.04em; padding: 7px 12px; }
-.copy:hover { border-color: var(--signal); }
-.os { gap: 18px; }
-.os button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none !important; padding: 4px 0; }
-.os button[aria-pressed="true"] { border-color: var(--signal); }
-.now { border: 0; border-radius: 0; background: none; padding: 0; font: 600 0.8rem var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--band-ink-2); }
-.now:hover { color: var(--band-ink); }
-.model { border-radius: 2px; }
-.tag { border-radius: 2px; }
-.bar, .progress, .bars i, .layers i { border-radius: 0; }
-
-/* Gold is kept for the brand mark, the headline's accent, and data (the layer bars, charts, progress). Everything
-   structural (section numbers, rules, links, controls) is neutral. */
-main section > h2::before, main section > .head > h2::before { color: var(--ink-2); }
-.step b, .setup > li::before { color: var(--ink-2); }
-.pillar { border-top-color: var(--rule); }
-.callout, .callout.deepseek { border-left-color: var(--ink-2); }
-.bubble.a { border-left-color: var(--ink-2); }
-.feat-eyebrow { color: var(--ink-2); }
-.stages li.now { color: var(--ink) !important; }
-.copy { color: var(--band-ink); }
-.copy:hover { border-color: var(--band-ink-2); }
-.os button[aria-pressed="true"] { border-color: var(--band-ink); }
-main a, footer a, .faq a { color: var(--ink); text-decoration-color: var(--ink-2); }
-main a:hover, footer a:hover { text-decoration-color: var(--ink); }
-.install p a { color: var(--band-ink); }
-.faq summary::after { color: var(--ink-2); }
-/* The brand's gradient (the terminal banner's gold, orange, pink, violet), used deliberately: a line along the top,
-   the headline's accent, section numbers, the model's layers and a glow behind it. Text and controls stay calm. */
-:root { --grad: linear-gradient(90deg, #ffcd3c, #ff9646 35%, #ff5f96 68%, #b46eff); }
-.pillar { border-top: 1px solid var(--rule); }
-.band { background: radial-gradient(60% 80% at 82% 55%, rgb(180 110 255 / 0.06), transparent 70%), radial-gradient(40% 60% at 70% 40%, rgb(255 150 70 / 0.045), transparent 70%), var(--band); }
-.bars i::after { background: var(--c, var(--signal)); }
-.model-key span::before { background: linear-gradient(90deg, #ffcd3c, #b46eff); }
-.now .dot { box-shadow: 0 0 0 4px rgb(63 185 80 / 0.18); }
-/* The page's scrollbar, in the brand's colours. */
-html { scrollbar-width: thin; scrollbar-color: #5a544c var(--paper); }
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: var(--paper); }
-::-webkit-scrollbar-thumb { background: #5a544c; border: 2px solid var(--paper); }
-::-webkit-scrollbar-thumb:hover { background: #f1b23c; }
-
-/* The jobs after the featured one, grouped by state: training now, waiting, queued, finished. Each card says how its
-   held-back score moved, and opens a report in place: the curve, the rounds that changed the model, its settings. */
-.job { grid-template-columns: minmax(0, 1fr) minmax(0, 300px); }
-@media (max-width: 760px) { .job { grid-template-columns: minmax(0, 1fr); } }
-.jobs { gap: 48px; margin-top: 48px; }
-.jobs:empty { display: none; }
-.jobs-list { display: grid; gap: 28px; margin-top: 18px; }
-.group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
-.group-head h3 { font-size: 1.15rem; }
-.group-head h3::before { content: "\25CF\00A0"; font-size: 0.7em; vertical-align: 0.12em; color: var(--ink-2); }
-.group.training .group-head h3::before { color: var(--good); }
-.group.waiting .group-head h3::before { color: var(--gold); }
-.count { font: 600 0.74rem var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-2); }
-.group-note { margin-top: 4px; font-size: 0.92rem; color: var(--ink-2); max-width: 46rem; }
-details.group > summary { cursor: pointer; list-style: none; }
-details.group > summary::-webkit-details-marker { display: none; }
-details.group > summary::after { content: "+"; margin-left: auto; font-weight: 700; color: var(--ink-2); }
-details.group[open] > summary::after { content: "–"; }
-summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 3px; }
-.kind { font: 600 0.74rem var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
-.job-title { margin: 0; font: 600 1.05rem var(--font-mono); overflow-wrap: anywhere; }
-.metric .delta { font: 700 1rem var(--font-body); color: var(--ink-2); white-space: nowrap; }
-@media (max-width: 480px) { .metric { font-size: 1.6rem; } }
-.delta.good, .rounds .good { color: var(--good); }
-.delta.bad, .rounds .bad { color: var(--bad); }
-.metric-note { margin-top: 2px; font-size: 0.88rem; color: var(--ink-2); }
-.headline > .metric-note:only-child { margin-top: 10px; font-size: 1rem; }
-.why { margin-top: 10px; font-size: 0.95rem; }
-.why-full { margin-top: 4px; font-size: 0.88rem; color: var(--ink-2); max-width: 46rem; overflow-wrap: anywhere; }
-.job-actions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
-.btn { font: 600 0.8rem var(--font-mono); letter-spacing: 0.04em; color: var(--ink); background: none; border: 1px solid var(--rule); border-radius: 2px; padding: 6px 12px; cursor: pointer; }
-.btn:hover { border-color: var(--ink-2); }
-.btn[aria-expanded="true"] { border-color: var(--ink); }
-.linkbtn { font: inherit; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--ink-2); text-underline-offset: 3px; }
-.linkbtn:hover { text-decoration-color: var(--ink); }
-.report { grid-column: 1 / -1; border-top: 1px solid var(--rule); padding-top: 20px; display: grid; gap: 28px; min-width: 0; }
-.report-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px 48px; align-items: start; }
-@media (max-width: 860px) { .report-grid { grid-template-columns: minmax(0, 1fr); } }
-.r-col { display: grid; gap: 28px; align-content: start; min-width: 0; }
-.r-sec { display: grid; gap: 10px; align-content: start; min-width: 0; }
-.r-head { margin: 0; font: 600 0.9rem var(--font-body); color: var(--ink-2); }
-.report-note { font-size: 0.88rem; color: var(--ink-2); }
-.chart { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; }
-.chart-y { display: flex; flex-direction: column; justify-content: space-between; height: 200px; padding-block: 3px; text-align: right; font: 0.75rem/14px var(--font-mono); color: var(--ink-2); }
-.chart-plot { position: relative; height: 200px; touch-action: pan-y; }
-.chart-plot svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.chart-x { grid-column: 2; display: flex; justify-content: space-between; gap: 12px; padding-top: 6px; font: 0.75rem var(--font-mono); color: var(--ink-2); }
-.chart-cross { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ink-2); pointer-events: none; }
-.chart-ring { position: absolute; width: 12px; height: 12px; border: 2px solid var(--ink); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-.chart-tip { position: absolute; z-index: 1; white-space: nowrap; background: var(--paper); border: 1px solid var(--rule); padding: 3px 8px; font-size: 0.85rem; color: var(--ink-2); pointer-events: none; }
-.chart-tip b { color: var(--ink); font-variant-numeric: tabular-nums; }
-.table-wrap { overflow-x: auto; }
-.rounds { width: 100%; border-collapse: collapse; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
-.rounds th { font-weight: 600; font-size: 0.82rem; color: var(--ink-2); text-align: right; padding: 0 0 6px 12px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
-.rounds td { text-align: right; padding: 5px 0 5px 12px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
-.rounds th:first-child, .rounds td:first-child { text-align: left; padding-left: 0; }
-.settings { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; font-size: 0.95rem; }
-.settings dt { color: var(--ink-2); }
-.settings dd { margin: 0; overflow-wrap: anywhere; }
-@media (max-width: 480px) { .settings { grid-template-columns: minmax(0, 1fr); gap: 0; } .settings dd { margin-bottom: 8px; } }
-.cmds { display: grid; gap: 6px; }
-.cmd { display: flex; align-items: center; gap: 10px; border: 1px solid var(--rule); border-radius: 2px; padding: 4px 4px 4px 12px; }
-.cmd code { flex: 1; min-width: 0; overflow-wrap: anywhere; background: none; border: 0; padding: 0; font-size: 0.82rem; }
-.cmd code span { display: inline-block; max-width: 100%; }
-.cmd .btn { flex: none; padding: 4px 10px; }
-.report, .r-col, .r-sec, .cmds { grid-template-columns: minmax(0, 1fr); }
-.feat > .job-actions { margin-top: 0; }
+  .tscreen { position: relative; font: 13px/1.6 "JetBrains Mono", Consolas, monospace; color: rgb(205 212 220); font-variant-ligatures: none; min-height: 30em; }
+  .tprobe { position: absolute; visibility: hidden; white-space: pre; }
+  .thead { display: flex; align-items: center; gap: 3ch; margin-bottom: 1.6em; min-width: 0; }
+  .tbanner { flex: none; width: 31ch; height: 3.2em; filter: drop-shadow(0 0 14px rgb(255 120 120 / 0.25)); }
+  .ttails { display: grid; min-width: 0; white-space: pre; }
+  .ttails span { overflow: hidden; text-overflow: ellipsis; }
+  .tmine { display: block; margin-bottom: 1.6em; }
+  .tlines, .tboot { margin: 0; font: inherit; white-space: pre; overflow: hidden; }
+  .c-dim { color: rgb(125 135 148); } .c-text { color: rgb(205 212 220); }
+  .c-white { color: rgb(240 244 248); font-weight: 600; }
+  .c-gold { color: rgb(255 200 50); font-weight: 600; text-shadow: 0 0 10px rgb(255 200 50 / 0.35); }
+  .c-green { color: rgb(95 225 130); font-weight: 600; }
+  .c-cyan { color: rgb(80 200 255); font-weight: 600; }
+  .p-register { color: rgb(120 170 255); font-weight: 600; } .p-compute { color: rgb(255 180 60); font-weight: 600; }
+  .p-reveal { color: rgb(200 125 255); font-weight: 600; } .p-verify { color: rgb(90 220 180); font-weight: 600; }
+  .tbar { display: inline-block; position: relative; height: 0.95em; vertical-align: -0.12em; background: rgb(255 255 255 / 0.07); }
+  .tbar i { position: absolute; left: 0; top: 0; bottom: 0; background: currentColor; box-shadow: 0 0 10px currentColor; }
+  .cursor { display: inline-block; width: 0.6em; height: 1.1em; vertical-align: -0.2em; background: rgb(205 212 220); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .pulse-dot { box-shadow: 0 0 0 0 rgb(63 185 80 / 0.5); animation: pulse 2s infinite; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgb(63 185 80 / 0); } 100% { box-shadow: 0 0 0 0 rgb(63 185 80 / 0); } }
+  details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
+  details[open] .plus { transform: rotate(45deg); }
+  @media (prefers-reduced-motion: reduce) { .pulse-dot, .cursor { animation: none; } html { scroll-behavior: auto; } }
 </style>
 </head>
-<body>
-<header class="band">
-  <div class="wrap">
-    <div class="topbar">
-      <a class="brand" href="/" aria-label="Vibe Hash home">
-        <svg viewBox="0 0 3 4" aria-hidden="true"><path fill="currentColor" d="M0 0h1v3H0zM2 0h1v3H2zM1 3h1v1H1z"/></svg>
-        <b>Vibe Hash</b><span class="tag">Testnet</span>
+<body class="bg-ink text-fg font-sans antialiased text-[17px] leading-relaxed">
+
+<!-- Testnet notice: always visible -->
+<div class="bg-signal/10 border-b border-signal/25 text-sm">
+  <div class="max-w-6xl mx-auto px-4 md:px-8 py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+    <span class="font-mono font-bold tracking-wider text-[0.72rem] uppercase text-signal border border-signal/40 rounded px-1.5 py-px">Testnet</span>
+    <span class="text-fg/90">Vibe Hash is a public test network. Test VIBE has no cash value, so don't buy or sell it. The software is open source and unaudited.</span>
+  </div>
+</div>
+
+<header class="relative glow-bg">
+  <div class="absolute inset-0 grid-bg pointer-events-none" aria-hidden="true"></div>
+  <div class="relative max-w-6xl mx-auto px-4 md:px-8">
+    <nav class="flex items-center justify-between gap-4 py-4 border-b border-rule" aria-label="Site">
+      <a href="/" class="flex items-center gap-2.5 no-underline text-fg" aria-label="Vibe Hash home">
+        <svg viewBox="0 0 3 4" class="w-[15px] h-5 text-signal" aria-hidden="true"><path fill="currentColor" d="M0 0h1v3H0zM2 0h1v3H2zM1 3h1v1H1z"/></svg>
+        <b class="font-display text-lg font-extrabold [font-stretch:115%]">Vibe Hash</b>
+        <span class="hidden sm:inline font-mono text-[0.68rem] tracking-wider uppercase text-mute border border-rule rounded px-1.5 py-px">Testnet · v<span id="nav-version">0.5.18</span></span>
       </a>
-      <nav class="topnav" aria-label="Site">
-        <a class="optional" href="#network">Live network</a><a href="#start">Start mining</a><a href="/guide/">Guide</a><a class="optional" href="/whitepaper.pdf">Whitepaper</a><a class="optional" href="https://github.com/AlphaChad5000/vibehash">GitHub</a>
-      </nav>
-    </div>
-    <div class="hero-wrap">
-    <div class="hero">
-      <a class="now" id="now" href="#network" hidden><span class="dot"></span><span id="now-text"></span></a>
-      <h1>Mining that trains <em>real AI models</em></h1>
-      <p class="lede">Instead of burning electricity on hashes nobody uses, your computer trains small, checkable pieces of AI models, and earns VIBE for every piece that checks out.</p>
-      <div class="install">
-        <div class="os" role="group" aria-label="Your system">
-          <button type="button" data-os="win" aria-pressed="true">Windows</button>
-          <button type="button" data-os="unix" aria-pressed="false">macOS and Linux</button>
-        </div>
-        <div class="runline"><code id="cmd">irm https://vibehash.org/install.ps1 | iex</code><button class="copy" type="button" id="copy">Copy</button></div>
-        <p id="cmd-note">Paste it into PowerShell. It installs everything, asks four quick questions, then offers to start mining. <a href="#start">What it asks</a></p>
+      <div class="flex items-center gap-5 text-[0.95rem]">
+        <a class="hidden md:inline text-mute hover:text-fg no-underline" href="#how">How it works</a>
+        <a class="hidden md:inline text-mute hover:text-fg no-underline" href="#research">Research</a>
+        <a class="hidden lg:inline text-mute hover:text-fg no-underline" href="#cli">CLI</a>
+        <a class="hidden sm:inline text-mute hover:text-fg no-underline" href="/guide/">Guide</a>
+        <a class="text-mute hover:text-fg no-underline" href="/network/">Live network</a>
+        <a class="hidden sm:inline-flex items-center rounded-md bg-signal text-[#1d1406] font-bold px-3.5 py-1.5 no-underline hover:brightness-110" href="#download">Download</a>
       </div>
-    </div>
-    <figure class="model" aria-label="DeepSeek V4.1 Flash's 40 layers: 36 prepared once in pieces, 4 trained by miners">
-      <div class="model-head"><b>DeepSeek V4.1 Flash</b><span>510 GB · 40 layers</span></div>
-      <div class="bars" id="bars" aria-hidden="true"></div>
-      <div class="model-key"><span>36 frozen layers, prepared once in pieces</span><span class="k-top">4 layers trained by miners</span></div>
-      <p>Too big for any one PC, so nobody holds it whole: each miner needs about 30 GB.</p>
-    </figure>
+    </nav>
+
+    <!-- Hero: the pitch and the two ways in on the left, the worker's live dashboard on the right -->
+    <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] gap-12 lg:gap-14 items-center pt-14 pb-16 lg:pt-20 lg:pb-24">
+      <div class="grid gap-6 min-w-0">
+        <a href="/network/" class="justify-self-start inline-flex items-center gap-2.5 font-mono text-[0.75rem] font-semibold tracking-wider uppercase text-mute hover:text-fg no-underline">
+          <span class="w-2 h-2 rounded-full bg-dim" id="hero-dot"></span><span id="hero-live">Connecting to the testnet…</span>
+        </a>
+        <h1 class="font-display font-extrabold [font-stretch:110%] tracking-tight leading-[1.02] text-[clamp(2.4rem,6vw,4rem)]">Mining that trains <span class="grad-text">real AI models</span></h1>
+        <p class="text-xl text-mute max-w-xl">Instead of burning electricity on hashes nobody uses, your computer trains small, checkable pieces of AI models and earns VIBE for every piece that checks out. Have a model to train? Post it as a job and the network trains it.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="#join" class="inline-flex items-center gap-2 rounded-lg bg-signal text-[#1d1406] font-bold px-5 py-3 no-underline hover:brightness-110">Join the network <span aria-hidden="true">→</span></a>
+          <a href="#submit" class="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] text-fg font-semibold px-5 py-3 no-underline hover:border-white/35">Submit a training job</a>
+        </div>
+        <div class="grid gap-2.5 max-w-xl" id="install">
+          <div class="flex gap-5" role="group" aria-label="Your system">
+            <button type="button" data-os="win" aria-pressed="true" class="os text-sm font-semibold text-mute py-1 border-b-2 border-transparent aria-pressed:text-fg aria-pressed:border-fg">Windows</button>
+            <button type="button" data-os="unix" aria-pressed="false" class="os text-sm font-semibold text-mute py-1 border-b-2 border-transparent aria-pressed:text-fg aria-pressed:border-fg">macOS and Linux</button>
+          </div>
+          <div class="flex items-center gap-3 rounded-lg bg-black/50 border border-rule pl-4 pr-1.5 py-1.5">
+            <code id="cmd" class="flex-1 min-w-0 overflow-x-auto whitespace-nowrap font-mono text-[0.9rem] text-fg [scrollbar-width:none] before:content-['>_'] before:text-signal">irm https://vibehash.org/install.ps1 | iex</code>
+            <button type="button" id="copy" class="flex-none font-mono text-[0.8rem] font-semibold border border-rule rounded px-3 py-1.5 hover:border-mute">Copy</button>
+          </div>
+          <p id="cmd-note" class="text-[0.95rem] text-mute">Paste it into PowerShell. It installs everything (Python too, if you need it), asks four quick questions, then offers to start mining.</p>
+        </div>
+      </div>
+
+      <figure class="glass m-0 min-w-0" id="term" aria-label="The worker's live dashboard: it finds the graphics card and connects to the node, then a drill bores through rock while it trains, an ore cart fills as results are committed, and gold flies when a block pays.">
+        <div class="flex items-center gap-3.5 px-4 py-2.5 border-b border-white/[0.07] font-mono text-[0.82rem] font-semibold text-mute">
+          <span class="lights inline-flex gap-[7px]" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span><span class="text-dim">&gt;</span> vibehash worker</span>
+          <span class="ml-auto inline-flex items-center gap-2 text-[0.68rem] tracking-wider uppercase text-dim"><span class="w-1.5 h-1.5 rounded-full bg-dim" id="term-dot"></span><span id="term-live">replay</span></span>
+        </div>
+        <div class="tscreen px-4 sm:px-5 pt-4 pb-4" id="tscreen" aria-hidden="true">
+          <span class="tprobe" id="tprobe">00000000000000000000</span>
+          <pre class="tboot" id="tboot"></pre>
+          <div id="tdash" hidden>
+            <div class="thead">
+              <svg class="tbanner" id="tbanner" preserveAspectRatio="none" shape-rendering="crispEdges"></svg>
+              <div class="ttails"><span class="c-dim" id="tchain">useful-work miner  ·  vibehash-public-1</span><span class="c-dim" id="taddr"></span></div>
+            </div>
+            <canvas class="tmine" id="tmine"></canvas>
+            <pre class="tlines" id="tlines"></pre>
+          </div>
+        </div>
+        <figcaption class="px-4 py-2.5 border-t border-white/[0.07] text-[0.82rem] text-dim">A replay of one rig's rounds, drawn the way <code class="font-mono text-mute">vibehash worker</code> draws them. Round and block numbers follow the live testnet.</figcaption>
+      </figure>
     </div>
   </div>
 </header>
 
-<section class="wrap pillars" aria-label="What makes it different">
-  <div class="pillar"><h3>Useful work, not wasted hashes</h3><p>Every round trains a real model someone asked for. The electricity goes into AI, not into puzzles nobody needs.</p></div>
-  <div class="pillar"><h3>Every piece is checked</h3><p>Other miners redo random bits of your work. Disagreements narrow to one calculation the network redoes, and cheaters lose their stake.</p></div>
-  <div class="pillar"><h3>Open by default</h3><p>The code is MIT-licensed, every block can be re-checked from the start with one command, and the trained models are given away.</p></div>
-</section>
-
 <main>
-  <section id="network" class="wrap" aria-labelledby="network-title">
-    <div class="head">
-      <h2 id="network-title">The network right now</h2>
-      <span class="live" id="live"><span class="dot"></span><span id="live-text">Connecting to the network…</span></span>
-    </div>
-    <dl class="stats" aria-live="polite">
-      <div class="stat"><dt>Miners online</dt><dd id="s-online">–</dd><small>working in the last 10 minutes</small></div>
-      <div class="stat"><dt>Miners today</dt><dd id="s-day">–</dd><small>in the last 24 hours</small></div>
-      <div class="stat"><dt>Training done today</dt><dd id="s-work">–</dd><small id="s-units">checked and paid</small></div>
-      <div class="stat"><dt>Latest block</dt><dd id="s-height">–</dd><small id="s-blocktime">&nbsp;</small></div>
-    </dl>
-    <div class="callout" id="empty" hidden>
-      <span>Nobody's mining right now. Start a worker and the next rounds' pay is yours.</span>
-      <a href="#top" id="empty-link">Get the install line</a>
-    </div>
-
-    <div id="featured"></div>
-    <div class="jobs" id="jobs"></div>
-
-    <div class="miners" id="miners" hidden>
-      <h3>Most work today</h3>
-      <ol id="miner-list"></ol>
+  <!-- Live numbers -->
+  <section class="border-y border-rule bg-ink2/60" aria-labelledby="live-title">
+    <div class="max-w-6xl mx-auto px-4 md:px-8 py-10">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 mb-6">
+        <h2 id="live-title" class="font-mono text-[0.75rem] font-semibold tracking-[0.08em] uppercase text-mute">The testnet right now</h2>
+        <span class="text-sm text-dim">Read from node.vibehash.org every 30 seconds</span>
+      </div>
+      <dl class="grid grid-cols-2 lg:grid-cols-6 gap-px bg-rule rounded-xl overflow-hidden border border-rule m-0">
+        <div class="bg-ink p-5"><dt class="text-sm text-mute">Latest block</dt><dd class="m-0 font-display text-3xl font-bold tabular-nums" id="s-height">–</dd><small class="text-dim text-sm" id="s-blocktime">&nbsp;</small></div>
+        <div class="bg-ink p-5"><dt class="text-sm text-mute">Miners online</dt><dd class="m-0 font-display text-3xl font-bold tabular-nums" id="s-online">–</dd><small class="text-dim text-sm">last 10 minutes</small></div>
+        <div class="bg-ink p-5"><dt class="text-sm text-mute">Miners today</dt><dd class="m-0 font-display text-3xl font-bold tabular-nums" id="s-day">–</dd><small class="text-dim text-sm">last 24 hours</small></div>
+        <div class="bg-ink p-5"><dt class="text-sm text-mute">Trained today</dt><dd class="m-0 font-display text-3xl font-bold tabular-nums" id="s-work">–</dd><small class="text-dim text-sm" id="s-units">checked and paid</small></div>
+        <div class="bg-ink p-5"><dt class="text-sm text-mute">Block reward</dt><dd class="m-0 font-display text-3xl font-bold tabular-nums" id="s-subsidy">–</dd><small class="text-dim text-sm">test VIBE a block</small></div>
+        <div class="bg-ink p-5"><dt class="text-sm text-mute">Jobs</dt><dd class="m-0 font-display text-3xl font-bold tabular-nums" id="s-jobs">–</dd><small class="text-dim text-sm" id="s-jobs-sub">on the network</small></div>
+      </dl>
+      <div class="mt-6 grid" id="job-list" aria-live="polite"></div>
+      <p class="mt-5 text-[0.95rem] text-mute"><a class="text-fg underline decoration-dim underline-offset-4 hover:decoration-fg" href="/network/">See every job's report on the live network page</a>: curves, the rounds that changed each model, and who mined most today.</p>
     </div>
   </section>
 
-  <section id="start" class="wrap" aria-labelledby="start-title">
-    <h2 id="start-title">Start mining</h2>
-    <ol class="setup">
-      <li><h3>Paste the install line</h3><p>Into PowerShell on Windows, or Terminal on macOS and Linux. It needs Python 3.10 or newer; on Windows it installs Python for you if it's missing.</p></li>
-      <li><h3>Answer four questions</h3>
-        <dl>
-          <dt>Network</dt><dd>Press Enter to join the public network.</dd>
-          <dt>Wallet</dt><dd>Choose a password. Setup then shows <strong>24 recovery words, once</strong>: write them down. They're the only way back into your wallet if you lose its file or forget the password.</dd>
-          <dt>Graphics card</dt><dd>If it finds one, it offers to install GPU support, a download of up to 3 GB. Without one, training runs on your processor.</dd>
-          <dt>Stake</dt><dd>Nothing to do: your first 5 VIBE of pay becomes your stake.</dd>
+  <!-- The two ways in -->
+  <section class="max-w-6xl mx-auto px-4 md:px-8 pt-20" aria-labelledby="paths-title">
+    <p class="font-mono text-[0.75rem] font-semibold tracking-[0.08em] uppercase text-mute">01 · Get started</p>
+    <h2 id="paths-title" class="mt-2 font-display text-[2rem] font-bold [font-stretch:108%] tracking-tight leading-tight">Two ways to use the network</h2>
+    <div class="mt-8 grid lg:grid-cols-2 gap-5">
+      <article id="join" class="scroll-mt-6 rounded-2xl border border-rule bg-ink2 p-6 md:p-7 grid gap-5 content-start">
+        <div>
+          <p class="font-mono text-[0.72rem] font-semibold tracking-wider uppercase text-signal">For computers with time to spare</p>
+          <h3 class="mt-1 font-display text-2xl font-bold">Join as a miner</h3>
+          <p class="mt-2 text-mute">Your GPU, or your processor if you don't have one, trains pieces of the network's jobs and checks other miners' pieces. Work that checks out is paid in test VIBE.</p>
+        </div>
+        <ol class="grid gap-3 list-none p-0 m-0">
+          <li class="grid grid-cols-[2rem_1fr] gap-3"><span class="font-display font-bold text-xl text-dim">1</span><div><b>Install</b><p class="text-mute text-[0.95rem]">Paste the install line above, or <a class="text-fg underline decoration-dim underline-offset-4" href="#download">download the app</a>. It needs Python 3.10 or newer; the Windows installer adds it.</p></div></li>
+          <li class="grid grid-cols-[2rem_1fr] gap-3"><span class="font-display font-bold text-xl text-dim">2</span><div><b>Answer four questions</b><p class="text-mute text-[0.95rem]">Network, wallet password (write down the 24 recovery words it shows once), GPU support, and stake: your first <span class="text-fg font-semibold" data-live="stake">5</span> VIBE of pay becomes your stake.</p></div></li>
+          <li class="grid grid-cols-[2rem_1fr] gap-3"><span class="font-display font-bold text-xl text-dim">3</span><div><b>Mine</b><p class="text-mute text-[0.95rem]"><code class="font-mono text-[0.85em] text-fg vh" data-cmd="worker">python -m vibehash worker</code> shows the dashboard above. <kbd class="font-mono text-[0.85em]">Ctrl</kbd>+<kbd class="font-mono text-[0.85em]">C</kbd> stops it.</p></div></li>
+        </ol>
+        <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-[0.95rem] border-t border-rule pt-4 m-0">
+          <dt class="text-mute">Any computer</dt><dd class="m-0">earns on the small jobs, GPU or not</dd>
+          <dt class="text-mute">DeepSeek job</dt><dd class="m-0">NVIDIA 8 GB+ (RTX 20-series or newer), 16 GB RAM, ~40 GB SSD</dd>
+          <dt class="text-mute">Pay</dt><dd class="m-0">by work done; an old laptop and a gaming rig earn the same per unit</dd>
         </dl>
-      </li>
-      <li><h3>Start mining</h3><p>Say yes when setup asks. <kbd>Ctrl</kbd>+<kbd>C</kbd> stops it, and <code class="vh" data-cmd="worker">python -m vibehash worker</code> starts it again any time. If your computer calls Python something else, the installer tells you what to type instead.</p></li>
+        <a href="/guide/" class="justify-self-start inline-flex items-center gap-2 rounded-lg bg-signal text-[#1d1406] font-bold px-4 py-2.5 no-underline hover:brightness-110">Read the miner's guide <span aria-hidden="true">→</span></a>
+      </article>
+
+      <article id="submit" class="scroll-mt-6 rounded-2xl border border-rule bg-ink2 p-6 md:p-7 grid gap-5 content-start">
+        <div>
+          <p class="font-mono text-[0.72rem] font-semibold tracking-wider uppercase text-violet">For people with a model to train</p>
+          <h3 class="mt-1 font-display text-2xl font-bold">Submit a training job</h3>
+          <p class="mt-2 text-mute">Post a job with a budget. Miners train it round by round, every piece is checked, and you download the result. On the testnet the budget is test VIBE.</p>
+        </div>
+        <div class="rounded-lg bg-black/50 border border-rule px-4 py-3 grid gap-1 overflow-x-auto font-mono text-[0.85rem]">
+          <span class="text-dim"># try it: sample data, posted as a job</span>
+          <span class="whitespace-nowrap"><span class="text-signal">&gt;</span> <span class="vh" data-cmd="example">python -m vibehash example</span></span>
+          <span class="whitespace-nowrap"><span class="text-signal">&gt;</span> <span class="vh" data-cmd="train fruit.csv">python -m vibehash train fruit.csv</span></span>
+          <span class="whitespace-nowrap"><span class="text-signal">&gt;</span> <span class="vh" data-cmd="job watch JOB">python -m vibehash job watch JOB</span></span>
+          <span class="whitespace-nowrap"><span class="text-signal">&gt;</span> <span class="vh" data-cmd="job download JOB">python -m vibehash job download JOB</span></span>
+        </div>
+        <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-[0.95rem] border-t border-rule pt-4 m-0">
+          <dt class="text-mute">Your CSV</dt><dd class="m-0"><code class="font-mono text-[0.85em]">train</code> builds the model and the job file for you</dd>
+          <dt class="text-mute">Open models</dt><dd class="m-0">fine-tune one like Qwen on your text; you get the LoRA adapter back</dd>
+          <dt class="text-mute">Full control</dt><dd class="m-0"><code class="font-mono text-[0.85em]">job template</code>, then <code class="font-mono text-[0.85em]">post-job</code></dd>
+          <dt class="text-mute">Changed your mind</dt><dd class="m-0"><code class="font-mono text-[0.85em]">cancel-job</code> returns the unspent budget</dd>
+        </dl>
+        <a href="https://github.com/AlphaChad5000/vibehash/blob/main/docs/CLI.md#vibehash-train" class="justify-self-start inline-flex items-center gap-2 rounded-lg border border-white/15 text-fg font-semibold px-4 py-2.5 no-underline hover:border-white/35">Job commands in the CLI docs <span aria-hidden="true">→</span></a>
+      </article>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="max-w-6xl mx-auto px-4 md:px-8 pt-24 scroll-mt-6" aria-labelledby="how-title">
+    <p class="font-mono text-[0.75rem] font-semibold tracking-[0.08em] uppercase text-mute">02 · How it works</p>
+    <h2 id="how-title" class="mt-2 font-display text-[2rem] font-bold [font-stretch:108%] tracking-tight leading-tight">One round, about every <span id="how-blocktime">40</span> seconds</h2>
+    <p class="mt-3 text-mute max-w-3xl">Each block seals one round. A round has four phases, the same four the worker's dashboard shows. Jobs with budget left take turns, one round each.</p>
+    <ol class="mt-8 grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-rule rounded-2xl overflow-hidden border border-rule list-none p-0">
+      <li class="bg-ink p-6 grid gap-2 content-start"><span class="font-mono text-[0.75rem] font-bold tracking-wider" style="color:rgb(120 170 255)">REGISTER</span><h3 class="font-display font-bold text-lg">Sign up for the round</h3><p class="text-mute text-[0.95rem]">Workers register for the round, and the node hands each a few units: training steps of the job whose turn it is.</p></li>
+      <li class="bg-ink p-6 grid gap-2 content-start"><span class="font-mono text-[0.75rem] font-bold tracking-wider" style="color:rgb(255 180 60)">COMPUTE</span><h3 class="font-display font-bold text-lg">Train and commit</h3><p class="text-mute text-[0.95rem]">Each worker trains its units on its GPU or CPU, uploads the checkpoints, and commits to its results before anyone can see them.</p></li>
+      <li class="bg-ink p-6 grid gap-2 content-start"><span class="font-mono text-[0.75rem] font-bold tracking-wider" style="color:rgb(200 125 255)">REVEAL</span><h3 class="font-display font-bold text-lg">Show the work</h3><p class="text-mute text-[0.95rem]">Workers reveal what they committed to, and the round's random beacon picks which pieces get checked.</p></li>
+      <li class="bg-ink p-6 grid gap-2 content-start"><span class="font-mono text-[0.75rem] font-bold tracking-wider" style="color:rgb(90 220 180)">VERIFY</span><h3 class="font-display font-bold text-lg">Check, then pay</h3><p class="text-mute text-[0.95rem]">Other workers redo the chosen pieces, which must match to within 1%. A disagreement narrows to one calculation the network redoes, and whoever was wrong is slashed.</p></li>
     </ol>
-    <div class="callout deepseek">
-      <div>
-        <h3>Mining the DeepSeek job</h3>
-        <p>It takes an NVIDIA graphics card with 8 GB or more (RTX 20-series or newer), 16 GB of memory (32 GB is faster) and about 40 GB free on an SSD. Your PC downloads about 30 GB of the model, after asking. You choose where it goes and how much space it may use, and it's deleted when the job ends, unless you'd rather keep it for next time. No PC ever holds the whole 510 GB model. Other graphics cards and processors keep earning on the network's other jobs.</p>
+    <dl class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-[0.95rem] m-0">
+      <div class="border-t border-rule pt-3"><dt class="text-mute">Minimum stake</dt><dd class="m-0 font-semibold"><span data-live="stake">5</span> VIBE, earned from your first pay</dd></div>
+      <div class="border-t border-rule pt-3"><dt class="text-mute">Unstaking</dt><dd class="m-0 font-semibold">spendable after 20 rounds, slashable until then</dd></div>
+      <div class="border-t border-rule pt-3"><dt class="text-mute">Validators</dt><dd class="m-0 font-semibold"><span data-live="validators">1</span> today; joining takes 100 VIBE staked</dd></div>
+      <div class="border-t border-rule pt-3"><dt class="text-mute">Every block</dt><dd class="m-0 font-semibold">re-checkable from genesis with <code class="font-mono text-[0.85em]">chain verify</code></dd></div>
+    </dl>
+  </section>
+
+  <!-- Research -->
+  <section id="research" class="max-w-6xl mx-auto px-4 md:px-8 pt-24 scroll-mt-6" aria-labelledby="research-title">
+    <p class="font-mono text-[0.75rem] font-semibold tracking-[0.08em] uppercase text-mute">03 · Research</p>
+    <h2 id="research-title" class="mt-2 font-display text-[2rem] font-bold [font-stretch:108%] tracking-tight leading-tight">Evo Hash: training a language model by evolution, on the chain</h2>
+    <p class="mt-3 text-mute max-w-3xl">Evo Hash trains with evolution strategies instead of gradients: each round, miners score twin pairs of small random changes to the model, and the chain keeps only the seeds and the scores, a few hundred bytes a generation. Anyone can rebuild the model from the chain. Base model: <span class="text-fg">Qwen2.5-0.5B-Instruct</span>. Every score below is 200 held-out questions per set.</p>
+
+    <div class="mt-8 grid md:grid-cols-3 gap-px bg-rule rounded-2xl overflow-hidden border border-rule">
+      <div class="bg-ink p-6"><p class="font-display text-5xl font-extrabold grad-text tabular-nums">+12.5 pts</p><p class="mt-2 font-semibold">MMLU, never trained on: 25% → 37.5%</p><p class="mt-1 text-sm text-mute">The peak, at the end of the first cycle of a 426-round testnet run (0.5.17). By the end of the second cycle it had given back to 32.5%: the problem 0.5.18's task mixing fixes.</p></div>
+      <div class="bg-ink p-6"><p class="font-display text-5xl font-extrabold text-fg tabular-nums">2.1%</p><p class="mt-2 font-semibold">Weight drift after 68 rounds</p><p class="mt-1 text-sm text-mute">How far the weights moved from the original, held there by an anchor so long runs don't drift the model to pieces. 0.5.18 measured 2.0% at 68 rounds and 2.3% at 102.</p></div>
+      <div class="bg-ink p-6"><p class="font-display text-5xl font-extrabold text-fg tabular-nums">+22 pts</p><p class="mt-2 font-semibold">SST-2: 35.5% → 57.5%</p><p class="mt-1 text-sm text-mute">The largest single-set gain at 68 rounds, 4 on each of the 17 curated tasks.</p></div>
+    </div>
+
+    <div class="mt-8 grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-8">
+      <div class="min-w-0">
+        <h3 class="font-semibold text-mute text-[0.95rem]">68 rounds, original → Evo Hash (0.5.17)</h3>
+        <div class="mt-3 overflow-x-auto">
+          <table class="w-full text-[0.95rem] tabular-nums border-collapse">
+            <thead><tr class="text-mute text-sm"><th class="text-left font-semibold pb-2 border-b border-rule">Held-out set</th><th class="text-right font-semibold pb-2 border-b border-rule">Before</th><th class="text-right font-semibold pb-2 border-b border-rule">After</th><th class="text-right font-semibold pb-2 border-b border-rule pl-3">Change</th><th class="pb-2 border-b border-rule pl-4 w-[34%]"><span class="sr-only">Bar</span></th></tr></thead>
+            <tbody id="evo-table"></tbody>
+          </table>
+        </div>
+        <p class="mt-3 text-sm text-dim">The four math sets went 1.5 to 3.5 points down, each within chance but all the same way: math needs room to reason, and answers are capped at 64 tokens.</p>
+      </div>
+      <div class="grid gap-5 content-start">
+        <div class="rounded-xl border border-rule p-5">
+          <h3 class="font-display font-bold">What the gains are, honestly</h3>
+          <p class="mt-2 text-mute text-[0.95rem]">Scored the way lm-evaluation-harness scores (which letter the model finds likeliest), the same sets moved within ±3 points (MMLU 43% → 44.5%). The gain is in <em>saying</em> what it knows, not in knowing more.</p>
+        </div>
+        <div class="rounded-xl border border-rule p-5">
+          <h3 class="font-display font-bold">0.5.18: mix the tasks every round</h3>
+          <p class="mt-2 text-mute text-[0.95rem]">One task at a time, a task trained early in a cycle had lost about 95% of its gain by its next turn. Mixing all 17 into every round, at 68 rounds:</p>
+          <dl class="mt-3 grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1 text-[0.92rem] tabular-nums m-0" id="mix-table"></dl>
+          <p class="mt-3 text-sm text-dim">Still below the original on boolq (−5), asdiv (−4) and aqua_rat (−3).</p>
+        </div>
+        <a class="text-fg underline decoration-dim underline-offset-4 hover:decoration-fg" href="https://github.com/AlphaChad5000/vibehash/blob/main/docs/evo-hash.pdf">Read the Evo Hash paper (PDF)</a>
       </div>
     </div>
-    <div class="handy">
-      <p><code class="vh" data-cmd="">python -m vibehash</code> <span>a menu of all of this: pick with the arrow keys</span></p>
-      <p><code class="vh" data-cmd="balance">python -m vibehash balance</code> <span>what you've earned</span></p>
-      <p><code class="vh" data-cmd="devices">python -m vibehash devices</code> <span>what this computer can train on</span></p>
-      <p><code class="vh" data-cmd="setup">python -m vibehash setup</code> <span>change the network, wallet or GPU support</span></p>
-      <p><a href="/guide/#troubleshooting">Troubleshooting</a> <span>if a step fails</span></p>
-    </div>
   </section>
 
-  <section class="wrap" aria-labelledby="how-title">
-    <h2 id="how-title">How it works</h2>
-    <div class="steps">
-      <div class="step"><b>1</b><h3>Get a piece of work</h3><p>Each round, about every 40 seconds, the network hands your computer a few training steps of a model someone has paid to have trained.</p></div>
-      <div class="step"><b>2</b><h3>Train it</h3><p>On your graphics card if you have one, or your processor if not. An old laptop and a gaming rig earn the same rate per unit of work.</p></div>
-      <div class="step"><b>3</b><h3>Get checked, get paid</h3><p>Other miners redo random bits of your work. If one disagrees, the network narrows it down to a single calculation and redoes just that. Work that checks out is paid by how much you did; cheaters lose their stake.</p></div>
+  <!-- CLI quick reference -->
+  <section id="cli" class="max-w-6xl mx-auto px-4 md:px-8 pt-24 scroll-mt-6" aria-labelledby="cli-title">
+    <p class="font-mono text-[0.75rem] font-semibold tracking-[0.08em] uppercase text-mute">04 · Command line</p>
+    <div class="mt-2 flex flex-wrap items-end justify-between gap-3">
+      <h2 id="cli-title" class="font-display text-[2rem] font-bold [font-stretch:108%] tracking-tight leading-tight">CLI quick reference</h2>
+      <a class="text-fg underline decoration-dim underline-offset-4 hover:decoration-fg" href="https://github.com/AlphaChad5000/vibehash/blob/main/docs/CLI.md">Every command in docs/CLI.md →</a>
     </div>
+    <p class="mt-3 text-mute max-w-3xl"><code class="font-mono text-[0.9em] text-fg">vibehash</code> and <code class="font-mono text-[0.9em] text-fg">python -m vibehash</code> are the same program. With no arguments it opens a menu. <code class="font-mono text-[0.9em]">--node</code> and <code class="font-mono text-[0.9em]">--wallet</code> default to what <code class="font-mono text-[0.9em]">setup</code> saved.</p>
+    <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4" id="cli-cards"></div>
   </section>
 
-  <section class="wrap" aria-labelledby="next-title">
-    <h2 id="next-title">What's live, and what's next</h2>
-    <div class="next">
-      <ul>
-        <li><strong>Live: fine-tuning open models.</strong> Teach a model like Qwen your own text. The network trains an add-on for it and you download the result. The node that runs the network never runs the model.</li>
-        <li><strong>Live: DeepSeek V4.1 Flash, in pieces.</strong> The first job teaches it to think shorter. Its 510 GB are cut so that no miner holds more than about 30 GB: the bottom layers are prepared once, in pieces anyone can run, and miners train the top four.</li>
-        <li><strong>Next: the full set.</strong> The first job is a 1,500-problem pilot. The full 7,473 come next, reusing the pilot's prepared pieces.</li>
-        <li><strong>Next: nobody in charge.</strong> Today one node runs the network and one storage bucket holds the hand-offs. More validators, and miners hosting the hand-offs, take that away.</li>
-      </ul>
-      <p><a href="/guide/">Read the guide</a> for how rounds, checks, payment and penalties work.</p>
+  <!-- Downloads -->
+  <section id="download" class="max-w-6xl mx-auto px-4 md:px-8 pt-24 scroll-mt-6" aria-labelledby="dl-title">
+    <p class="font-mono text-[0.75rem] font-semibold tracking-[0.08em] uppercase text-mute">05 · Download</p>
+    <h2 id="dl-title" class="mt-2 font-display text-[2rem] font-bold [font-stretch:108%] tracking-tight leading-tight">Get the worker</h2>
+    <p class="mt-3 text-mute max-w-3xl">The latest release is <a class="text-fg underline decoration-dim underline-offset-4" href="https://github.com/AlphaChad5000/vibehash/releases/latest">v0.5.18</a>. The app sets everything up, keeps the worker running and can start at login. The install lines install the command line instead.</p>
+    <div class="mt-8 grid md:grid-cols-3 gap-4">
+      <a href="https://github.com/AlphaChad5000/vibehash/releases/latest/download/VibeHash.exe" class="group rounded-2xl border border-rule bg-ink2 p-6 grid gap-2 no-underline text-fg hover:border-signal/60">
+        <span class="font-mono text-[0.72rem] font-semibold tracking-wider uppercase text-mute">Windows 10 / 11</span>
+        <span class="font-display text-xl font-bold">VibeHash.exe</span>
+        <span class="text-sm text-mute">The app: setup, mining and start at login</span>
+        <span class="mt-2 text-signal font-semibold group-hover:underline">Download ↓</span>
+      </a>
+      <a href="https://github.com/AlphaChad5000/vibehash/releases/latest/download/VibeHash-macos" class="group rounded-2xl border border-rule bg-ink2 p-6 grid gap-2 no-underline text-fg hover:border-signal/60">
+        <span class="font-mono text-[0.72rem] font-semibold tracking-wider uppercase text-mute">macOS</span>
+        <span class="font-display text-xl font-bold">VibeHash-macos</span>
+        <span class="text-sm text-mute">Run <code class="font-mono">chmod +x</code> on it first</span>
+        <span class="mt-2 text-signal font-semibold group-hover:underline">Download ↓</span>
+      </a>
+      <a href="https://github.com/AlphaChad5000/vibehash/releases/latest/download/VibeHash-linux" class="group rounded-2xl border border-rule bg-ink2 p-6 grid gap-2 no-underline text-fg hover:border-signal/60">
+        <span class="font-mono text-[0.72rem] font-semibold tracking-wider uppercase text-mute">Linux</span>
+        <span class="font-display text-xl font-bold">VibeHash-linux</span>
+        <span class="text-sm text-mute">Run <code class="font-mono">chmod +x</code> on it first</span>
+        <span class="mt-2 text-signal font-semibold group-hover:underline">Download ↓</span>
+      </a>
+    </div>
+    <div class="mt-4 grid md:grid-cols-2 gap-4">
+      <div class="rounded-2xl border border-rule p-5 grid gap-2 min-w-0"><span class="text-sm text-mute">Windows, PowerShell: <a class="text-fg underline decoration-dim underline-offset-4" href="/install.ps1">install.ps1</a></span><code class="font-mono text-[0.88rem] bg-black/50 border border-rule rounded-lg px-3 py-2 overflow-x-auto whitespace-nowrap">irm https://vibehash.org/install.ps1 | iex</code></div>
+      <div class="rounded-2xl border border-rule p-5 grid gap-2 min-w-0"><span class="text-sm text-mute">macOS and Linux, Terminal: <a class="text-fg underline decoration-dim underline-offset-4" href="/install.sh">install.sh</a></span><code class="font-mono text-[0.88rem] bg-black/50 border border-rule rounded-lg px-3 py-2 overflow-x-auto whitespace-nowrap">curl -fsSL https://vibehash.org/install.sh | sh</code></div>
+    </div>
+    <p class="mt-4 text-sm text-dim">Windows SmartScreen or macOS Gatekeeper may warn before the first run. Run testnet software on a machine you're comfortable testing with.</p>
+  </section>
+
+  <!-- FAQ -->
+  <section class="max-w-6xl mx-auto px-4 md:px-8 pt-24" aria-labelledby="faq-title">
+    <p class="font-mono text-[0.75rem] font-semibold tracking-[0.08em] uppercase text-mute">06 · Questions</p>
+    <h2 id="faq-title" class="mt-2 font-display text-[2rem] font-bold [font-stretch:108%] tracking-tight leading-tight">Questions people ask</h2>
+    <div class="mt-6 max-w-4xl border-t border-rule">
+      <details class="border-b border-rule py-4"><summary class="cursor-pointer font-bold flex justify-between gap-3">Is VIBE worth money?<span class="plus text-mute transition-transform">+</span></summary><p class="mt-2 text-mute">No. This is a test network and test VIBE has no cash value, so don't buy or sell it. It's how the network keeps score of who did the work.</p></details>
+      <details class="border-b border-rule py-4"><summary class="cursor-pointer font-bold flex justify-between gap-3">What does it do to my computer?<span class="plus text-mute transition-transform">+</span></summary><p class="mt-2 text-mute">While you mine it uses your graphics card or processor for training. It asks before any big download, keeps model files only where and as long as you allow, and stops with Ctrl+C.</p></details>
+      <details class="border-b border-rule py-4"><summary class="cursor-pointer font-bold flex justify-between gap-3">How is cheating stopped?<span class="plus text-mute transition-transform">+</span></summary><p class="mt-2 text-mute">Workers commit to their results before revealing them, and other workers redo randomly chosen pieces. A disagreement narrows to one calculation the network redoes, and whoever was wrong loses stake, so faking work or falsely accusing someone costs more than it gains.</p></details>
+      <details class="border-b border-rule py-4"><summary class="cursor-pointer font-bold flex justify-between gap-3">Who runs the network?<span class="plus text-mute transition-transform">+</span></summary><p class="mt-2 text-mute">Today a single validator, operated by the project's founder. The software already supports many validators voting on every block; adding more is the next step.</p></details>
+      <details class="border-b border-rule py-4"><summary class="cursor-pointer font-bold flex justify-between gap-3">Is this connected to DeepSeek or Qwen?<span class="plus text-mute transition-transform">+</span></summary><p class="mt-2 text-mute">No. Vibe Hash isn't affiliated with or endorsed by them. Their open models are among the models the network fine-tunes, under their licences.</p></details>
     </div>
   </section>
-  <section class="wrap" aria-labelledby="faq-title">
-  <h2 id="faq-title">Questions people ask</h2>
-  <div class="faq">
-    <details><summary>Is VIBE worth money?</summary><p>No. Vibe Hash is a test network and VIBE has no cash value, so don't buy or sell it. It's how the network keeps score of who did the work.</p></details>
-    <details><summary>What do I need to mine?</summary><p>Any computer can earn on the small jobs, with or without a graphics card. The DeepSeek job needs an NVIDIA card with 8 GB or more, 16 GB of memory and about 40 GB free on an SSD.</p></details>
-    <details><summary>What does it do to my computer?</summary><p>While you mine, it uses your graphics card or processor for training. It asks before any big download, keeps model files only where and as long as you allow, and stops with Ctrl+C. The software is open source and hasn't been audited, so run it on a machine you're comfortable testing with.</p></details>
-    <details><summary>How is cheating stopped?</summary><p>Other miners redo random pieces of everyone's work. If someone disagrees, the network narrows the disagreement to a single calculation and redoes just that one. Whoever was wrong loses the stake they put up, so faking work or falsely accusing someone costs more than it gains.</p></details>
-    <details><summary>Who runs the network?</summary><p>Today a single validator runs it, operated by the project's founder. The software already supports many validators voting on every block, and adding more is the next step toward nobody being in charge.</p></details>
-    <details><summary>Is this connected to DeepSeek?</summary><p>No. Vibe Hash isn't affiliated with or endorsed by DeepSeek. Its open model is one of the models the network fine-tunes, under its MIT licence.</p></details>
-    <details><summary>Where can I read how it works?</summary><p>The <a href="/guide/">guide</a> walks through rounds, checks, payment and penalties, the <a href="/whitepaper.pdf">whitepaper</a> has the design in eleven pages, and the <a href="https://github.com/AlphaChad5000/vibehash">source code</a> is on GitHub.</p></details>
-  </div>
-</section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <div class="cols">
-      <span class="mark"><svg viewBox="0 0 3 4" aria-hidden="true"><path fill="currentColor" d="M0 0h1v3H0zM2 0h1v3H2zM1 3h1v1H1z"/></svg>Vibe Hash</span>
-      <nav aria-label="More"><a href="/guide/">Guide</a><a href="/whitepaper.pdf">Whitepaper</a><a href="https://github.com/AlphaChad5000/vibehash">Source code</a><a href="https://node.vibehash.org/status">Node status</a></nav>
+<footer class="mt-24 border-t border-rule">
+  <div class="max-w-6xl mx-auto px-4 md:px-8 py-10 grid gap-6">
+    <div class="flex flex-wrap justify-between gap-6 items-start">
+      <div class="grid gap-3">
+        <span class="inline-flex items-center gap-2 font-display font-bold"><svg viewBox="0 0 3 4" class="w-3 h-4 text-signal" aria-hidden="true"><path fill="currentColor" d="M0 0h1v3H0zM2 0h1v3H2zM1 3h1v1H1z"/></svg>Vibe Hash <span class="font-mono text-[0.68rem] tracking-wider uppercase text-signal border border-signal/40 rounded px-1.5 py-px">Testnet</span></span>
+        <div class="flex flex-wrap gap-2 font-mono text-[0.75rem]" aria-label="Status">
+          <a href="https://node.vibehash.org/status" class="inline-flex rounded overflow-hidden border border-rule no-underline"><span class="bg-ink2 text-mute px-2 py-0.5">node</span><span class="px-2 py-0.5 text-dim" id="b-node">checking</span></a>
+          <a href="https://node.vibehash.org/status" class="inline-flex rounded overflow-hidden border border-rule no-underline"><span class="bg-ink2 text-mute px-2 py-0.5">block</span><span class="px-2 py-0.5 text-fg" id="b-block">–</span></a>
+          <a href="https://github.com/AlphaChad5000/vibehash/releases/latest" class="inline-flex rounded overflow-hidden border border-rule no-underline"><span class="bg-ink2 text-mute px-2 py-0.5">release</span><span class="px-2 py-0.5 text-fg">v0.5.18</span></a>
+          <a href="https://github.com/AlphaChad5000/vibehash/blob/main/LICENSE" class="inline-flex rounded overflow-hidden border border-rule no-underline"><span class="bg-ink2 text-mute px-2 py-0.5">license</span><span class="px-2 py-0.5 text-fg">MIT</span></a>
+        </div>
+      </div>
+      <nav class="flex flex-wrap gap-x-6 gap-y-2 text-[0.95rem]" aria-label="More">
+        <a class="text-mute hover:text-fg" href="https://github.com/AlphaChad5000/vibehash">Protocol on GitHub</a>
+        <a class="text-mute hover:text-fg" href="https://github.com/AlphaChad5000/vibehash/blob/main/docs/CLI.md">CLI reference</a>
+        <a class="text-mute hover:text-fg" href="/guide/">Guide</a>
+        <a class="text-mute hover:text-fg" href="/whitepaper.pdf">Whitepaper</a>
+        <a class="text-mute hover:text-fg" href="/network/">Live network</a>
+        <a class="text-mute hover:text-fg" href="https://node.vibehash.org/status">Node status</a>
+      </nav>
     </div>
-    <p>Unaudited test network software. VIBE has no cash value, so don't buy or sell it.</p>
-    <p class="fine">Disclaimer: All product names, logos, and brands are property of their respective owners and are used purely for identification. Vibe Hash isn't affiliated with or endorsed by them.</p>
+    <p class="text-sm text-dim">Unaudited test network software. Test VIBE has no cash value, so don't buy or sell it.</p>
+    <p class="text-xs text-dim">All product names, logos and brands are property of their respective owners and are used purely for identification. Vibe Hash isn't affiliated with or endorsed by them.</p>
   </div>
 </footer>
+
+<script>
+/* The worker's dashboard, ported from vibehash/minerui.py and termui.py: the same banner, rock, tunnel, rails, ore cart
+   and drill, the same round and phase bar and lines. It replays one rig's rounds (register, compute, reveal, verify,
+   paid), with the round and block numbers taken from the live node. Over the terminal it adds smooth scrolling, spark
+   and coin particles, lantern glow and rolling cart wheels. It pauses off screen; reduced motion keeps it still. */
+(function () {
+  "use strict";
+  var fig = document.getElementById("term"); if (!fig) return;
+  var screen = document.getElementById("tscreen"), boot = document.getElementById("tboot"), dash = document.getElementById("tdash");
+  var canvas = document.getElementById("tmine"), ctx = canvas.getContext("2d"), linesEl = document.getElementById("tlines");
+  var probe = document.getElementById("tprobe");
+  var still = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  function rgb(a, k) { k = k || 1; return "rgb(" + Math.min(255, a[0] * k | 0) + "," + Math.min(255, a[1] * k | 0) + "," + Math.min(255, a[2] * k | 0) + ")"; }
+  var STRATA = [[96, 66, 50], [128, 90, 62], [158, 118, 82], [116, 104, 94], [82, 76, 74]], LIGHT = [1.1, 0.95, 0.78], SHADE = [1, 0.8, 0.6];
+  var ROCK = STRATA.map(function (s) { return LIGHT.map(function (l) { return SHADE.map(function (d) { return rgb(s, l * d); }); }); });
+  var TIMBER = "rgb(168,112,58)", LAMP = [255, 214, 120], RAIL = "rgb(150,152,165)", TIE = "rgb(110,86,62)", CART = "rgb(176,116,60)";
+  var GOLD = "rgb(255,200,50)", TEXTC = "rgb(205,212,220)", DIMC = "rgb(125,135,148)";
+  var SPARKS = [[255, 225, 130], [255, 160, 60], [255, 250, 225], [255, 110, 40]];
+  var BANNER = ["█ █ █ █▄▄ █▀▀   █ █ ▄▀█ █▀ █ █", "▀▄▀ █ █▄█ ██▄   █▀█ █▀█ ▄█ █▀█"];
+  var BAND = 7, TOP = 2, MID = 3, LOW = 4;
+
+  function noise(x, y) {
+    var n = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) >>> 0;
+    n = Math.imul((n ^ (n >>> 13)) >>> 0, 1274126177) >>> 0;
+    return (n ^ (n >>> 16)) >>> 0;
+  }
+  function lampDist(x) { var m = ((x - 6) % 24 + 24) % 24; return Math.min(m, 24 - m); }
+  function litBy(d) { return d <= 3 ? 0 : d <= 7 ? 1 : 2; }
+  function layerAt(x, r) { return (r + noise(Math.floor(x / 9), 99) % 3 + (noise(Math.floor(x / 4), r) % 7 === 0 ? 1 : 0)) % 5; }
+  function int(n) { return Math.round(n).toLocaleString("en-US"); }
+
+  // The banner, as pixels: each line of half-blocks is two rows, coloured gold to violet left to right.
+  (function () {
+    var svg = document.getElementById("tbanner"), w = BANNER[0].length, out = [];
+    svg.setAttribute("viewBox", "0 0 " + w + " 4");
+    out.push('<defs><linearGradient id="tgrad" x1="0" x2="' + w + '" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffcd3c"/><stop offset=".35" stop-color="#ff9646"/><stop offset=".68" stop-color="#ff5f96"/><stop offset="1" stop-color="#b46eff"/></linearGradient></defs><g fill="url(#tgrad)">');
+    BANNER.forEach(function (line, li) {
+      for (var j = 0; j < line.length; j++) {
+        var ch = line[j];
+        if (ch === "█" || ch === "▀") out.push('<rect x="' + j + '" y="' + li * 2 + '" width="1.02" height="1.02"/>');
+        if (ch === "█" || ch === "▄") out.push('<rect x="' + j + '" y="' + (li * 2 + 1) + '" width="1.02" height="1.02"/>');
+      }
+    });
+    svg.innerHTML = out.join("") + "</g>";
+  })();
+
+  var hex = ""; for (var i = 0; i < 36; i++) hex += "0123456789abcdef"[Math.random() * 16 | 0];
+  var ADDR = "vibe1" + hex;
+  document.getElementById("taddr").textContent = ADDR;
+
+  // ---- the replayed rig ----
+  var PH = [["register", 4], ["compute", 16], ["reveal", 5], ["verify", 7]];
+  var S = {
+    clock: 0, round: 213, height: 212, live: null, ph: 0, t0: -1,
+    assigned: 0, trained: 0, committed: 0, checked: 0, units: 75, checks: 35, rounds: 13, flops: 5.65e12,
+    wallet: 31.58, shownWallet: 31.58, stake: 5, earned: 36.58, shownEarned: 36.58, rep: 0.91, scroll: 0,
+    popup: null, feed: [], gen: 40, reward: 51.2, jobs: ["fruit-demo", "evo2-c1-mix"]
+  };
+  // Jobs take turns, one round each: this rig alternates a small classifier and an Evo Hash job.
+  function job() { return S.round % 2 ? ["evo2-c1-mix", "Evo Hash · Qwen2.5-0.5B"] : ["fruit-demo", "17,925 float32 weights"]; }
+  function vibe(v, sign) { return (sign && v >= 0 ? "+" : "") + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " VIBE"; }
+  function nn(c, noun) { return c.toLocaleString("en-US") + " " + noun + (c === 1 ? "" : "s"); }
+  function si(n, unit) { var s = [[1e15, "P"], [1e12, "T"], [1e9, "G"], [1e6, "M"], [1e3, "k"]]; for (var i = 0; i < s.length; i++) if (n >= s[i][0]) return (n / s[i][0]).toFixed(2) + " " + s[i][1] + unit; return n.toFixed(0) + " " + unit; }
+  function hms(d) { return d.toTimeString().slice(0, 8); }
+  function note(text, cls) { S.feed.push([new Date(), text, cls || "c-text"]); if (S.feed.length > 8) S.feed.shift(); }
+  var now0 = Date.now();
+  S.feed.push([new Date(now0 - 21000), "round 211: computed 6 units, committed 6", "c-text"]);
+  S.feed.push([new Date(now0 - 6000), "paid +3.18 VIBE in block 211", "c-gold"]);
+  S.feed.push([new Date(now0 - 3000), "round 212: registered", "c-text"]);
+
+  function phase() { return PH[S.ph][0]; }
+  function elapsed() { return S.clock - S.t0; }
+  function busy() { return phase() !== "register"; }
+  function training() { return phase() === "compute" && S.trained < S.assigned; }
+
+  function advance(dt) {
+    S.clock += dt;
+    var p = phase(), e = elapsed();
+    if (p === "compute") {
+      var tr = Math.max(0, Math.min(6, Math.floor((e - 0.4) / 2.35))), cm = Math.max(0, Math.min(6, Math.floor((e - 1.1) / 2.35)));
+      if (tr > S.trained) { S.units += tr - S.trained; S.flops += (tr - S.trained) * 0.0753e12; S.trained = tr; }
+      S.committed = cm;
+    } else if (p === "verify") {
+      var ck = Math.max(0, Math.min(2, Math.floor((e - 1) / 2.5)));
+      if (ck > S.checked) { S.checks += ck - S.checked; S.checked = ck; }
+    }
+    if (e >= PH[S.ph][1]) endPhase();
+    S.scroll += dt * (still ? 0 : training() ? 12 : busy() ? 4.2 : 0);
+    var k = Math.min(1, dt * 2.5);
+    S.shownWallet += (S.wallet - S.shownWallet) * k; S.shownEarned += (S.earned - S.shownEarned) * k;
+  }
+  function endPhase() {
+    var p = phase();
+    if (p === "register") { note("round " + S.round + ": registered"); S.assigned = 6; }
+    if (p === "compute") note("round " + S.round + ": computed 6 units, committed 6");
+    if (p === "verify") {
+      S.height = S.round;
+      if (job()[0] === "evo2-c1-mix") {
+        var d = 0.1 + Math.random() * 0.6; S.reward += d; S.gen++;
+        note("evo2-c1-mix generation " + S.gen + ": mean reward " + S.reward.toFixed(1) + "% (+" + d.toFixed(1) + " pts)", "c-green");
+      } else note("round " + S.round + ": checked 2 results, both agree");
+      var pay = Math.round((2.7 + Math.random() * 0.9) * 100) / 100;
+      S.wallet += pay; S.earned += pay; S.rounds++; S.rep = Math.min(0.99, S.rep + 0.004);
+      S.popup = [S.clock, pay]; coinBurst();
+      note("paid " + vibe(pay, true) + " in block " + S.height, "c-gold");
+      S.round++;
+      if (S.live && S.live + 1 > S.round) { S.round = S.live + 1; S.height = S.live; }
+      S.assigned = S.trained = S.committed = S.checked = 0;
+    }
+    S.ph = (S.ph + 1) % PH.length; S.t0 = S.clock;
+  }
+
+  // ---- layout: font size, cell size, columns ----
+  var fs = 13, cw = 7.8, lh = 20.8, cols = 70, dx = 31, cssW = 0, cssH = 0, dpr = 1, lastHTML = "";
+  function layout() {
+    var cs = getComputedStyle(screen), avail = screen.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    fs = Math.max(9.5, Math.min(13.5, avail / (48 * 0.6)));
+    screen.style.fontSize = fs + "px";
+    cw = probe.getBoundingClientRect().width / 20 || fs * 0.6;
+    lh = fs * 1.6;
+    cols = Math.max(40, Math.floor(avail / cw));
+    dx = Math.max(16, Math.floor(cols * 0.45));
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    cssW = cols * cw; cssH = BAND * lh;
+    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+    canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    lastHTML = "";
+  }
+
+  // ---- particles ----
+  var parts = [], coins = [];
+  function coinBurst() {
+    if (still) return;
+    for (var i = 0; i < 14; i++) coins.push({ x: (dx + 0.5) * cw, y: MID * lh, vx: -40 - Math.random() * 170, vy: -170 - Math.random() * 150, t: 0, life: 2.4, ph: Math.random() * 6 });
+  }
+  function emit(dt) {
+    if (still || !busy()) return;
+    var n = (training() ? 55 : 18) * dt;
+    while (n > 0) {
+      if (n < 1 && Math.random() > n) break;
+      n -= 1;
+      parts.push({ x: (dx + 1) * cw - 2, y: (MID + 0.5) * lh + (Math.random() - 0.5) * lh * 1.4, vx: -30 - Math.random() * 150, vy: -150 + Math.random() * 190, t: 0, life: 0.25 + Math.random() * 0.55, c: SPARKS[Math.random() * 4 | 0] });
+    }
+  }
+  function stepParts(dt) {
+    var railY = (LOW + 0.5) * lh - 3;
+    parts = parts.filter(function (p) { p.t += dt; p.vy += 520 * dt; p.x += p.vx * dt; p.y += p.vy * dt; return p.t < p.life; });
+    coins = coins.filter(function (c) {
+      c.t += dt; c.vy += 640 * dt; c.x += c.vx * dt; c.y += c.vy * dt;
+      if (c.y > railY - 4 && c.vy > 0) { c.y = railY - 4; c.vy *= -0.42; c.vx *= 0.7; }
+      return c.t < c.life;
+    });
+  }
+  function diamond(x, y, r, color, glow) {
+    ctx.save(); ctx.fillStyle = color; if (glow) { ctx.shadowColor = color; ctx.shadowBlur = glow; }
+    ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r * 0.72, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r * 0.72, y); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  // ---- the mine: minerui._band cell for cell, with the upgrades on top ----
+  function drawBand() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    var off = Math.floor(S.scroll), frac = S.scroll - off, face = (dx + 1) * cw, f = still ? 0 : Math.floor(S.clock * 12), c, r, x, px, isBusy = busy();
+    // Already mined, left of the drill: rock above and below a timbered tunnel, lit by lanterns.
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, face, cssH); ctx.clip();
+    var lamps = [];
+    for (c = 0; c <= cols + 1; c++) {
+      x = off + c; px = (c - frac) * cw; if (px > face) break;
+      var ld = lampDist(x), lit = litBy(ld);
+      for (r = 0; r < BAND; r++) {
+        if (r >= TOP && r <= LOW) continue;
+        if (r === TOP - 1 && (x % 12 === 11 || x % 12 === 0 || x % 12 === 1)) continue;
+        var v = noise(x, r) % 100;
+        ctx.fillStyle = ROCK[layerAt(x, r)][lit][v < 60 ? 0 : v < 88 ? 1 : 2];
+        ctx.fillRect(px, r * lh, cw + 0.6, lh + 0.6);
+      }
+      if (x % 12 === 0) { // pit props, and the beam over them
+        ctx.fillStyle = TIMBER;
+        ctx.fillRect(px + cw * 0.18, (TOP - 0.35) * lh, cw * 0.2, 2.85 * lh - 4);
+        ctx.fillRect(px + cw * 0.62, (TOP - 0.35) * lh, cw * 0.2, 2.85 * lh - 4);
+        ctx.fillRect(px - cw, (TOP - 0.42) * lh, cw * 3, lh * 0.16);
+        ctx.fillRect(px - cw, (TOP - 0.2) * lh, cw * 3, lh * 0.12);
+      }
+      if (ld === 0) lamps.push(px + cw / 2);
+    }
+    var ry = (LOW + 0.5) * lh;
+    for (c = 0; c <= cols + 1; c++) { x = off + c; px = (c - frac) * cw; if (px > face) break; if (x % 4 === 0) { ctx.fillStyle = TIE; ctx.fillRect(px + cw / 2 - 1.5, ry - 6, 3, 12); } }
+    ctx.fillStyle = RAIL; ctx.fillRect(0, ry - 3, face, 1.5); ctx.fillRect(0, ry + 1.5, face, 1.5);
+    lamps.forEach(function (lx) {
+      var fl = still ? 1 : 0.9 + 0.1 * Math.sin(S.clock * 9 + lx * 0.37);
+      var g = ctx.createRadialGradient(lx, (TOP + 0.4) * lh, 0, lx, (TOP + 0.4) * lh, cw * 5);
+      g.addColorStop(0, "rgba(255,214,120," + 0.28 * fl + ")"); g.addColorStop(1, "rgba(255,214,120,0)");
+      ctx.fillStyle = g; ctx.fillRect(lx - cw * 5, (TOP - 1) * lh, cw * 10, lh * 3.5);
+      ctx.save(); ctx.fillStyle = rgb(LAMP); ctx.shadowColor = rgb(LAMP); ctx.shadowBlur = 10 * fl;
+      ctx.fillRect(lx - 0.5, TOP * lh, 1, lh * 0.18); ctx.fillRect(lx - cw * 0.28, TOP * lh + lh * 0.18, cw * 0.56, lh * 0.36); ctx.restore();
+    });
+    ctx.restore();
+
+    // Not mined yet, right of the drill: solid rock with ore in it.
+    ctx.save(); ctx.beginPath(); ctx.rect(face, 0, cssW - face, cssH); ctx.clip();
+    for (c = Math.max(0, dx - 1); c <= cols + 1; c++) {
+      x = off + c; px = (c - frac) * cw; if (px + cw < face) continue;
+      for (r = 0; r < BAND; r++) {
+        var vv = noise(x, r) % 100;
+        if (vv < (r >= TOP && r <= LOW ? 4 : 1)) { diamond(px + cw / 2, r * lh + lh / 2, lh * 0.26, GOLD, 6); continue; }
+        ctx.fillStyle = ROCK[layerAt(x, r)][1][vv < 60 ? 0 : vv < 88 ? 1 : 2];
+        ctx.fillRect(px, r * lh, cw + 0.6, lh + 0.6);
+      }
+    }
+    if (isBusy && !still) { var fg = ctx.createLinearGradient(face, 0, face + cw * 4, 0); fg.addColorStop(0, "rgba(255,190,90,0.28)"); fg.addColorStop(1, "rgba(255,190,90,0)"); ctx.fillStyle = fg; ctx.fillRect(face, (TOP - 0.5) * lh, cw * 4, lh * 4); }
+    ctx.restore();
+
+    // The ore cart: one nugget per unit committed this round, on wheels that roll with the tunnel.
+    var cx = dx - 13;
+    ctx.fillStyle = CART;
+    ctx.fillRect((cx + 0.5) * cw, MID * lh + lh * 0.08, cw * 0.5, lh * 0.92);
+    ctx.fillRect((cx + 5) * cw, MID * lh + lh * 0.08, cw * 0.5, lh * 0.92);
+    ctx.fillRect((cx + 0.5) * cw, (MID + 1) * lh - 3, cw * 5, 3);
+    for (var k = 0; k < 4; k++) {
+      var ox = (cx + 1 + k) * cw + cw / 2, oy = MID * lh + lh * 0.55;
+      if (k < Math.min(S.committed, 4)) diamond(ox, oy, lh * 0.27, GOLD, 8);
+      else { ctx.fillStyle = DIMC; ctx.fillRect(ox - 1, oy - 1, 2, 2); }
+    }
+    ctx.fillStyle = RAIL; ctx.fillRect((cx + 5.5) * cw, MID * lh + lh * 0.5 - 0.75, cw * 3.5, 1.5);
+    var wr = Math.min(cw * 0.95, lh * 0.36), wy = ry - 3 - wr, ang = (S.scroll * cw) / wr;
+    [cx + 1.5, cx + 4.5].forEach(function (wc) {
+      ctx.save(); ctx.translate(wc * cw, wy);
+      ctx.fillStyle = "#0a0908"; ctx.strokeStyle = TEXTC; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, wr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.rotate(ang); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-wr, 0); ctx.lineTo(wr, 0); ctx.moveTo(0, -wr); ctx.lineTo(0, wr); ctx.stroke();
+      ctx.restore();
+    });
+
+    // The drill: a body whose stripes turn while it works, and a spinning tip.
+    var bx = (dx - 4) * cw, by = (TOP + 0.5) * lh, bw = 4 * cw, bh = 2 * lh;
+    var bg = ctx.createLinearGradient(0, by, 0, by + bh); bg.addColorStop(0, "rgb(150,225,255)"); bg.addColorStop(0.45, "rgb(80,200,255)"); bg.addColorStop(1, "rgb(40,140,200)");
+    ctx.save(); if (isBusy && !still) { ctx.shadowColor = "rgba(80,200,255,0.6)"; ctx.shadowBlur = 16; }
+    ctx.fillStyle = bg; ctx.fillRect(bx, by, bw, bh); ctx.restore();
+    for (var s = 0; s < 4; s++) if ((s + (isBusy ? f : 0)) % 3 === 0) { ctx.fillStyle = "rgba(20,70,110,0.75)"; ctx.fillRect(bx + s * cw, MID * lh, cw, lh); }
+    ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.fillRect(bx, by, bw, 1.5);
+    var tx = dx * cw, ty = (MID + 0.5) * lh, th = lh * 1.25;
+    function tipPath() { ctx.beginPath(); ctx.moveTo(tx, ty - th / 2); ctx.lineTo(tx + cw, ty); ctx.lineTo(tx, ty + th / 2); ctx.closePath(); }
+    ctx.save(); if (isBusy && !still) { ctx.shadowColor = "rgb(225,245,255)"; ctx.shadowBlur = 14; }
+    ctx.fillStyle = isBusy ? "rgb(225,245,255)" : "rgb(80,200,255)"; tipPath(); ctx.fill(); ctx.restore();
+    ctx.save(); tipPath(); ctx.clip(); ctx.strokeStyle = "rgba(30,90,130,0.7)"; ctx.lineWidth = 1.2;
+    var sp = isBusy && !still ? (S.clock * 30) % 6 : 0;
+    for (var q = -12; q < 12; q += 6) { ctx.beginPath(); ctx.moveTo(tx + q + sp, ty - th / 2); ctx.lineTo(tx + q + sp + 6, ty + th / 2); ctx.stroke(); }
+    ctx.restore();
+
+    // Sparks off the rock face, gold coins after a payout, and the payout itself.
+    ctx.save(); ctx.globalCompositeOperation = "lighter";
+    parts.forEach(function (p) {
+      ctx.strokeStyle = "rgba(" + p.c[0] + "," + p.c[1] + "," + p.c[2] + "," + (1 - p.t / p.life) + ")"; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 0.025, p.y - p.vy * 0.025); ctx.stroke();
+    });
+    ctx.restore();
+    coins.forEach(function (c) {
+      var rr = lh * 0.2;
+      ctx.save(); ctx.globalAlpha = Math.min(1, (c.life - c.t) / 0.6); ctx.translate(c.x, c.y); ctx.scale(Math.max(0.15, Math.abs(Math.cos(c.t * 9 + c.ph))), 1);
+      ctx.fillStyle = GOLD; ctx.shadowColor = GOLD; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(0, 0, rr, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,250,220,0.8)"; ctx.beginPath(); ctx.arc(-rr * 0.3, -rr * 0.3, rr * 0.35, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+    if (S.popup && S.clock - S.popup[0] < 2.5) {
+      var label = " " + vibe(S.popup[1], true) + " ", age = S.clock - S.popup[0], lx = Math.max(0, (dx - Math.floor(label.length / 2)) * cw), rise = still ? 1 : Math.min(1, age * 4);
+      ctx.save(); ctx.globalAlpha = Math.min(1, (2.5 - age) / 0.5);
+      ctx.fillStyle = "#0a0908"; ctx.fillRect(lx, 0, label.length * cw, lh);
+      ctx.font = "700 " + fs + "px 'JetBrains Mono', Consolas, monospace"; ctx.textBaseline = "middle"; ctx.fillStyle = GOLD; ctx.shadowColor = GOLD; ctx.shadowBlur = 10;
+      ctx.fillText(label, lx, lh * 0.5 + (1 - rise) * 6); ctx.restore();
+    }
+  }
+
+  // ---- the lines under the mine (minerui.frame) ----
+  function len(segs) { return segs.reduce(function (n, s) { return n + (s.bar != null ? s.bar : s[0].length); }, 0); }
+  function fit(w) { for (var i = 1; i < arguments.length; i++) if (len(arguments[i]) <= w) return arguments[i]; return arguments[arguments.length - 1]; }
+  function html(segs) {
+    return segs.map(function (s) {
+      if (s.bar != null) return '<span class="tbar ' + s.cls + '" style="width:' + s.bar + 'ch"><i style="width:' + (s.fill * 100).toFixed(1) + '%"></i></span>';
+      var t = s[0].replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; });
+      return s[1] ? '<span class="' + s[1] + '">' + t + "</span>" : t;
+    }).join("");
+  }
+  function drawLines() {
+    var w = cols, L = [], p = phase(), e = elapsed(), dur = PH[S.ph][1], left = Math.max(0, Math.ceil(dur - e)), j = job();
+    var n = Math.max(10, Math.min(32, w - 46)), pc = "p-" + p;
+    var rl = [["ROUND " + S.round + " ", "c-white"], [" " + (p.toUpperCase() + "        ").slice(0, 8) + " ", pc], { bar: n, fill: Math.min(1, e / dur), cls: pc }, [(" " + left + "s left").padStart(10), "c-text"]];
+    L.push(fit(w, rl.concat([["    block " + int(S.height), "c-dim"]]), rl));
+    var mark = isFinite(S.clock) && busy() && !still ? "►»>"[Math.floor(S.clock * 12) % 3] : "►";
+    var act = p === "register" ? "registering for round " + S.round
+      : p === "compute" ? (S.trained < 6 ? (j[0] === "evo2-c1-mix" ? "scoring twin pair " : "training unit ") + (S.trained + 1) + " of 6" : S.committed < 6 ? "committing results" : "waiting for the others to commit")
+      : p === "reveal" ? "revealing 6 results" : S.checked < 2 ? "checking unit " + (S.checked + 1) + " of 2 from other workers" : "waiting for the block";
+    L.push([[mark + " ", pc], [act, "c-text"]]);
+    var sel = [["job:", "c-dim"], [" [", "c-gold"], ["0 ", "c-dim"], ["auto", "c-gold"], ["]", "c-gold"]];
+    S.jobs.slice(0, 4).forEach(function (id, i) { sel.push(["  " + (i + 1) + " ", "c-dim"], [id, "c-text"]); });
+    L.push(fit(w, sel, sel.slice(0, 9), sel.slice(0, 7), sel.slice(0, 5)));
+    L.push([]);
+    var speed = 290e9 * (1 + 0.012 * Math.sin(S.clock / 3));
+    L.push(fit(w, [["rig       ", "c-dim"], ["NVIDIA GeForce RTX 4070 SUPER (CUDA)", "c-white"]], [["rig       ", "c-dim"], ["RTX 4070 SUPER (CUDA)", "c-white"]]));
+    L.push(fit(w, [["speed     ", "c-dim"], [si(speed, "FLOP/s"), "c-white"], ["  on " + j[0] + " (" + j[1] + ")", "c-dim"]], [["speed     ", "c-dim"], [si(speed, "FLOP/s"), "c-white"], ["  on " + j[0], "c-dim"]]));
+    L.push(fit(w, [["round     ", "c-dim"], [String(S.assigned), "c-white"], [" assigned · ", "c-dim"], [String(S.trained), "c-white"], [" trained · ", "c-dim"], [String(S.committed), "c-white"], [" committed · ", "c-dim"], [String(S.checked), "c-white"], [" checked", "c-dim"]],
+      [["round     ", "c-dim"], [S.trained + "/" + S.assigned, "c-white"], [" trained · ", "c-dim"], [String(S.committed), "c-white"], [" committed", "c-dim"]]));
+    L.push(fit(w, [["session   ", "c-dim"], [nn(S.units, "unit"), "c-white"], [" · ", "c-dim"], [nn(S.checks, "check"), "c-white"], [" · ", "c-dim"], [nn(S.rounds, "round"), "c-white"], [" · ", "c-dim"], [si(S.flops, "FLOP"), "c-white"], [" trained", "c-dim"]],
+      [["session   ", "c-dim"], [nn(S.units, "unit"), "c-white"], [" · ", "c-dim"], [si(S.flops, "FLOP"), "c-white"]]));
+    L.push([]);
+    L.push(fit(w, [["wallet    ", "c-dim"], [vibe(S.shownWallet), "c-gold"], ["   ", null], [vibe(S.shownEarned, true) + " this session", "c-green"]], [["wallet    ", "c-dim"], [vibe(S.shownWallet), "c-gold"], ["  ", null], [vibe(S.shownEarned, true), "c-green"]]));
+    L.push([["stake     ", "c-dim"], [vibe(S.stake), "c-white"], ["   reputation ", "c-dim"], { bar: 10, fill: Math.round(S.rep * 10) / 10, cls: "c-green" }, [" " + S.rep.toFixed(2), "c-text"]]);
+    L.push([]);
+    var feed = S.feed.slice(-4);
+    while (feed.length < 4) feed.unshift(null);
+    feed.forEach(function (f) { L.push(f ? [[hms(f[0]) + "  ", "c-dim"], [f[1], f[2]]] : []); });
+    L.push([]);
+    L.push(fit(w, [["Ctrl+C to stop", "c-dim"], ["   ·   node https://node.vibehash.org", "c-dim"]], [["Ctrl+C to stop", "c-dim"]]));
+    var out = L.map(html).join("\n");
+    if (out !== lastHTML) { linesEl.innerHTML = out; lastHTML = out; }
+  }
+
+  // ---- boot: what happens before the dashboard (device check, node handshake, wallet) ----
+  var BOOT = [
+    ["$ ", "c-dim", "vibehash worker", "c-white", 0.7],
+    ["", "", "vibehash 0.5.18 · connecting to https://node.vibehash.org", "c-dim", 0.5],
+    ["✓ ", "c-green", "GPU: NVIDIA GeForce RTX 4070 SUPER · 12 GB · CUDA", "c-text", 0.55],
+    ["✓ ", "c-green", "benchmark: 290 GFLOP/s", "c-text", 0.5],
+    ["✓ ", "c-green", "node: vibehash-public-1 · block #HEIGHT · client 0.5.18 accepted", "c-text", 0.6],
+    ["✓ ", "c-green", "wallet: " + ADDR.slice(0, 10) + "…" + ADDR.slice(-4) + " · stake 5.00 VIBE", "c-text", 0.55],
+    ["» ", "c-cyan", "starting the mining dashboard", "c-text", 0.9]
+  ];
+  var bootT = 0, bootDone = false;
+  function drawBoot() {
+    var t = 0, out = [];
+    for (var i = 0; i < BOOT.length; i++) {
+      var b = BOOT[i], start = t; t += b[4];
+      if (bootT < start) break;
+      var text = b[2].replace("HEIGHT", int(S.height)), shown = i === 0 ? text.slice(0, Math.floor((bootT - start) * 30)) : text;
+      out.push((b[0] ? '<span class="' + b[1] + '">' + b[0] + "</span>" : "") + '<span class="' + b[3] + '">' + shown.replace(/</g, "&lt;") + "</span>");
+    }
+    boot.innerHTML = out.join("\n") + ' <span class="cursor"></span>';
+    if (bootT > t + 0.3) { bootDone = true; boot.hidden = true; dash.hidden = false; layout(); }
+  }
+
+  // ---- the loop: runs while the terminal is on screen and the page is visible ----
+  var visible = true, last = 0, raf = 0;
+  function frame(ts) {
+    raf = 0;
+    var dt = last ? Math.min(0.1, (ts - last) / 1000) : 0; last = ts;
+    if (!bootDone) { bootT += dt; drawBoot(); }
+    else if (still) { if (Math.floor(S.clock + dt) !== Math.floor(S.clock) || !lastHTML) { advance(dt); drawBand(); drawLines(); } else S.clock += dt; }
+    else { advance(dt); emit(dt); stepParts(dt); drawBand(); drawLines(); }
+    if (visible && !document.hidden) raf = requestAnimationFrame(frame); else last = 0;
+  }
+  function kick() { if (!raf && visible && !document.hidden) { last = 0; raf = requestAnimationFrame(frame); } }
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; kick(); }).observe(fig);
+  document.addEventListener("visibilitychange", kick);
+  function relayout() { if (bootDone) { layout(); if (still) { drawBand(); drawLines(); } } }
+  if ("ResizeObserver" in window) new ResizeObserver(relayout).observe(screen); else window.addEventListener("resize", relayout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+  if (still) { bootDone = true; boot.hidden = true; dash.hidden = false; layout(); S.ph = 1; S.t0 = -7; S.assigned = 6; advance(0); }
+  kick();
+
+  window.vhTerm = {
+    sync: function (net) {
+      if (!net || !net.height) return;
+      if (S.live == null) {
+        var h = net.height;
+        S.height = h; S.round = h + 1;
+        S.feed = S.feed.map(function (f) { return [f[0], f[1].replace(/\b211\b/g, String(h - 1)).replace(/\b212\b/g, String(h)), f[2]]; });
+      }
+      S.live = net.height;
+      if (net.chain_id) document.getElementById("tchain").textContent = "useful-work miner  ·  " + net.chain_id;
+      var ids = (net.jobs || []).filter(function (j) { return j.status !== "finished"; }).map(function (j) { return String(j.id); });
+      if (ids.length) S.jobs = ids;
+      document.getElementById("term-live").textContent = "replay · live block #" + int(net.height);
+      document.getElementById("term-dot").className = "w-1.5 h-1.5 rounded-full bg-good";
+      lastHTML = "";
+      kick();
+    }
+  };
+})();
+</script>
 
 <script>
 (function () {
   "use strict";
   var NODE = new URLSearchParams(location.search).get("node") || "https://node.vibehash.org";
   var SYN = 1e8;
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function int(n) { return Math.round(n).toLocaleString("en-US"); }
+
+  // ---- install line, and every `python -m vibehash ...` on the page, for this system ----
   var CMDS = {
     win: ["irm https://vibehash.org/install.ps1 | iex", "Paste it into PowerShell. It installs everything (Python too, if you need it), asks four quick questions, then offers to start mining."],
     unix: ["curl -fsSL https://vibehash.org/install.sh | sh", "Paste it into Terminal. It installs everything, asks four quick questions, then offers to start mining."]
   };
-  var $ = function (id) { return document.getElementById(id); };
-
-  // ---- the hero's picture of the model: 36 frozen layers filling in turn, 4 trained ----
-  (function () {
-    var bars = document.getElementById("bars");
-    for (var i = 0; i < 40; i++) {
-      var b = document.createElement("i");
-      if (i >= 36) b.className = "top";
-      else b.style.setProperty("--c", "hsl(" + (44 - i * 3.75) + " 78% " + (58 - i * 0.1) + "%)");  // gold to violet, layer 1 up
-      b.style.setProperty("--n", String(i));
-      bars.appendChild(b);
-    }
-  })();
-
-  // ---- install line ----
-  var OS = "win";
-  function vhText(cmd) { return ((OS === "win" ? "python" : "python3") + " -m vibehash " + cmd).trim(); }
   function pick(os) {
-    OS = os;
-    document.querySelectorAll(".os button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.os === os)); });
+    document.querySelectorAll("button.os").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.os === os)); });
     $("cmd").textContent = CMDS[os][0];
-    $("cmd-note").firstChild.textContent = CMDS[os][1] + " ";
-    document.querySelectorAll("code.vh").forEach(function (c) { c.textContent = vhText(c.dataset.cmd); });
-    document.querySelectorAll("code.words").forEach(cmdWords);  // the job reports' commands
+    $("cmd-note").textContent = CMDS[os][1];
+    document.querySelectorAll(".vh").forEach(function (c) { c.textContent = ((os === "win" ? "python" : "python3") + " -m vibehash " + c.dataset.cmd).trim(); });
   }
-  document.querySelectorAll(".os button").forEach(function (b) { b.addEventListener("click", function () { pick(b.dataset.os); }); });
+  document.querySelectorAll("button.os").forEach(function (b) { b.addEventListener("click", function () { pick(b.dataset.os); }); });
   pick(/Win/i.test(navigator.userAgent) ? "win" : "unix");
   $("copy").addEventListener("click", function () {
-    var text = $("cmd").textContent, btn = $("copy");
-    var done = function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
-    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done, function () {}); }
+    var btn = $("copy");
+    if (navigator.clipboard) navigator.clipboard.writeText($("cmd").textContent).then(function () {
+      btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1600);
+    }, function () {});
   });
-  $("empty-link").addEventListener("click", function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); $("copy").focus({ preventScroll: true }); });
 
-  // ---- formatting ----
-  function int(n) { return Math.round(n).toLocaleString("en-US"); }
-  function vibe(syn) { var v = syn / SYN; return (v >= 100 ? int(v) : v.toLocaleString("en-US", { maximumFractionDigits: 3 })) + " VIBE"; }
-  function flopParts(n) {
-    var units = ["FLOP", "kFLOP", "MFLOP", "GFLOP", "TFLOP", "PFLOP", "EFLOP"], i = 0;
-    while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }
-    return [n >= 100 ? String(Math.round(n)) : n.toFixed(1), units[i]];
-  }
-  function flops(n) { return n ? flopParts(n).join(" ") : "None yet"; }
-  function ago(s) {
-    if (s < 0) s = 0;
-    if (s < 90) return Math.round(s) + " s ago";
-    if (s < 5400) return Math.round(s / 60) + " min ago";
-    if (s < 129600) return Math.round(s / 3600) + " h ago";
-    return Math.round(s / 86400) + " days ago";
-  }
-  function short(a) { return a.length > 16 ? a.slice(0, 9) + "…" + a.slice(-5) : a; }
-  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  // ---- research tables (vibehash HANDOFF.md, releases 0.5.17 and 0.5.18; 200 held-out items a set) ----
+  var EVO = [["sst2", 35.5, 57.5], ["emotion", 35, 49], ["sciq", 54.5, 67], ["arc_challenge", 31.5, 43], ["arc_easy", 47, 58],
+             ["mmlu (never trained)", 25, 32.5], ["commonsense_qa", 42, 49], ["winogrande", 43.5, 49], ["openbookqa", 33, 38]];
+  $("evo-table").innerHTML = EVO.map(function (r) {
+    var d = r[2] - r[1];
+    return '<tr><td class="py-1.5 border-b border-rule font-mono text-[0.85rem]">' + esc(r[0]) + '</td><td class="text-right py-1.5 border-b border-rule text-mute">' + r[1] + '%</td><td class="text-right py-1.5 border-b border-rule font-semibold">' + r[2] +
+      '%</td><td class="text-right py-1.5 border-b border-rule pl-3 text-good font-semibold">+' + d + '</td><td class="py-1.5 border-b border-rule pl-4"><div class="relative h-2 bg-white/[0.06]"><i class="absolute inset-y-0 left-0 bg-white/20" style="width:' + r[1] +
+      '%"></i><i class="absolute inset-y-0 grad-line" style="left:' + r[1] + '%;width:' + d + '%"></i></div></td></tr>';
+  }).join("");
+  var MIX = [["sst2", 85.5, 57.5], ["sciq", 74.5, 67], ["arc_easy", 63.5, 58], ["openbookqa", 44, 38], ["commonsense_qa", 54, 49], ["hellaswag", 30.5, 26], ["mmlu (never trained)", 39, 32.5]];
+  $("mix-table").innerHTML = '<dt class="text-dim text-sm">set</dt><dd class="m-0 text-dim text-sm text-right">mixed</dd><dd class="m-0 text-dim text-sm text-right">one at a time</dd>' +
+    MIX.map(function (r) { return '<dt class="font-mono text-[0.85rem]">' + esc(r[0]) + '</dt><dd class="m-0 text-right font-semibold text-good">' + r[1] + '%</dd><dd class="m-0 text-right text-mute">' + r[2] + '%</dd>'; }).join("");
 
-  // ---- a job's score over its rounds ----
-  function spark(points, metric) {
-    var ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 300 84"); svg.setAttribute("preserveAspectRatio", "none"); svg.setAttribute("class", "spark");
-    svg.setAttribute("role", "img");
-    var pts = points.filter(function (p) { return p[1] != null; });
-    if (pts.length < 2) return null;
-    var vals = pts.map(function (p) { return p[1]; });
-    var lo = metric === "accuracy" ? 0 : Math.min.apply(null, vals), hi = metric === "accuracy" ? 1 : Math.max.apply(null, vals);
-    if (hi - lo < 1e-9) { hi = lo + 1; }
-    var xy = pts.map(function (p, i) { return [i / (pts.length - 1) * 298 + 1, 80 - (p[1] - lo) / (hi - lo) * 74]; });
-    var line = xy.map(function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" ");
-    var area = document.createElementNS(ns, "polygon");
-    area.setAttribute("points", "1,82 " + line + " 299,82"); area.setAttribute("fill", "var(--gold-wash)");
-    var path = document.createElementNS(ns, "polyline");
-    path.setAttribute("points", line); path.setAttribute("fill", "none"); path.setAttribute("stroke", "var(--signal)");
-    path.setAttribute("stroke-width", "2"); path.setAttribute("vector-effect", "non-scaling-stroke"); path.setAttribute("stroke-linejoin", "round");
-    svg.appendChild(area); svg.appendChild(path);
-    svg.setAttribute("aria-label", (metric === "accuracy" ? "Accuracy" : "Loss") + " over " + pts.length + " rounds");
-    return svg;
-  }
-
-  // ---- jobs: grouped by state, how each one is improving, and a report on each that opens in place ----
-  // Job ids, models, reasons and settings come from the network and can carry anything. They only ever go in as text
-  // (el(), textContent) or through attribute setters, and become a link, an element id or a command only when plain.
-  var ID_OK = /^[a-z0-9][a-z0-9._-]{0,63}$/;  // the network's own rule for a job id (vibehash/tasks.py)
-  var HF_OK = /^([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)@([0-9a-f]{7,64})$/;  // a fine-tune's base: org/name@commit
-  function byId() { return Object.create(null); }  // keyed by job id, so an id like "__proto__" is only a key
-  var OPEN = byId(), MORE = byId(), WHY = byId(), JOBS = byId(), UIDS = byId(), uids = 0;
-  var finishedOpen = false, last = null, wanted = null;
-  function own(o, k) { return o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined; }
-  function num(x) { return typeof x === "number" && isFinite(x) ? x : null; }
-  function count(n, word) { return int(n) + " " + word + (n === 1 ? "" : "s"); }
-  function uid(id) { return UIDS[id] || (UIDS[id] = "j" + (++uids)); }  // a plain stand-in for an id in element ids and keys
-  function here(j, net) { return num(own(net.miners.online_by_job, String(j.id))) || 0; }
-
-  function score(v, metric) { return metric === "accuracy" ? (v * 100).toFixed(1).replace(/\.0$/, "") + "%" : v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(2) : v.toFixed(3); }
-  // The change from a to b, in words, and whether it's better: loss going down, accuracy going up.
-  function change(a, b, metric) {
-    var acc = metric === "accuracy", d = acc ? (b - a) * 100 : a > 0 ? (b - a) / a * 100 : 0;
-    if (Math.abs(d) < 0.05) return ["no change", ""];
-    return [(d > 0 ? "+" : "−") + Math.abs(d).toFixed(acc || Math.abs(d) < 10 ? 1 : 0) + (acc ? " pts" : "%"), (acc ? d > 0 : d < 0) ? "good" : "bad"];
-  }
-  function bytes(n) { var u = ["bytes", "kB", "MB", "GB", "TB"], i = 0; while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; } return (i ? n.toFixed(n >= 100 ? 0 : 1) : String(n)) + " " + u[i]; }
-  // At most n of points, evenly spread, always keeping the first and the last (as netstats.py thins a curve).
-  function thin(points, n) {
-    if (points.length <= n) return points;
-    var out = [], step = (points.length - 1) / (n - 1);
-    for (var i = 0; i < n; i++) out.push(points[Math.round(i * step)]);
-    return out;
-  }
-
-  // How a job's held-back score moved, from its rounds (GET /job): where it started, then each round that changed the
-  // model with the score that shows it. A model trained from scratch is scored after its round. A fine-tune's scorers
-  // score the model its round started from, so its round shows in the next scored round's loss (as netstats.py). A
-  // round nobody scored has no number and is skipped. Points are [round, score, what it is, is it the start].
-  function trainingOf(rounds, metric) {
-    var tune = metric === "loss", key = tune ? "val_loss" : "val_acc", next = [], at = null, worked = [], start = null, i;
-    for (i = rounds.length - 1; i >= 0; i--) { next[i] = at; if (num(rounds[i][key]) != null) at = i; }
-    for (i = 0; i < rounds.length; i++) if ((num(rounds[i].accepted_units) || 0) > 0) worked.push(i);
-    var first = worked.length ? worked[0] : rounds.length;
-    for (i = 0; i < Math.min(rounds.length, tune ? first + 1 : first); i++) if (num(rounds[i][key]) != null) { start = i; break; }
-    var steps = worked.map(function (w) {
-      var s = tune ? next[w] : num(rounds[w][key]) != null ? w : null;
-      return { height: rounds[w].height, units: rounds[w].accepted_units, at: s, value: s == null ? null : num(rounds[s][key]), change: null };
-    });
-    // Rounds that trained back to back before one score share it: it goes on the last of them.
-    for (i = 0; i + 1 < steps.length; i++) if (steps[i].at != null && steps[i].at === steps[i + 1].at) { steps[i].value = null; steps[i].shared = true; }
-    var points = start == null ? [] : [[rounds[start].height, num(rounds[start][key]), "start, round #" + int(rounds[start].height), true]];
-    var prev = start == null ? null : points[0][1];
-    steps.forEach(function (s) {
-      if (s.value == null) return;
-      if (prev != null) s.change = change(prev, s.value, metric);
-      prev = s.value;
-      points.push([rounds[s.at].height, s.value, "after round #" + int(s.height), false]);
-    });
-    var end = steps[steps.length - 1];
-    return { metric: metric, steps: steps, points: points, rounds: rounds.length, pending: !!end && end.value == null };
-  }
-  // A job's curve: from its rounds when the page has read them, else from the node's summary (GET /network).
-  function curveOf(j) {
-    var c = own(JOBS, String(j.id));
-    if (c && c.training) return c.training;
-    var pts = (Array.isArray(j.history) ? j.history : []).filter(function (p) { return Array.isArray(p) && num(p[1]) != null; })
-      .map(function (p, i) { return [p[0], p[1], (i ? "round #" : "start, round #") + int(p[0]), !i]; });
-    return { metric: j.metric === "accuracy" ? "accuracy" : "loss", steps: null, points: pts, pending: false };
-  }
-  // Until the public node runs 0d1a9ee, its summary ends a fine-tune's curve on the score from before the last round's
-  // work: the curve's last point is that round itself. Only then are the job's rounds read for its card as well.
-  function lagging(j) {
-    var h = Array.isArray(j.history) && j.history.length ? j.history[j.history.length - 1] : null;
-    return j.metric === "loss" && !!j.last_trained && !!h && h[0] === j.last_trained.height;
-  }
-
-  // A fine-tune's base model ("fine-tune of hf:org/name@commit", or a spec's "hf:org/name@commit"), named short, with a
-  // link to that exact commit only when every part of it is plain.
-  function baseOf(s) {
-    var m = /^(?:fine-tune of )?hf:(.+)$/.exec(String(s == null ? "" : s));
-    if (!m) return null;
-    var ok = HF_OK.exec(m[1]);
-    if (ok) return { full: ok[1] + "/" + ok[2], name: ok[2], commit: ok[3], url: "https://huggingface.co/" + ok[1] + "/" + ok[2] + "/tree/" + ok[3] };
-    return { full: m[1].slice(0, 80), name: (m[1].split("@")[0].split("/").pop() || "a model").slice(0, 40), commit: null, url: null };
-  }
-  function pretty(name) { return /^deepseek/i.test(name) ? name.replace(/-/g, " ") : name; }
-  function prepped(p) { return !p || !Array.isArray(p.done) || p.done.every(function (x) { return x >= 1; }); }
-  function kindOf(j) {
-    var b = baseOf(j.model);
-    if (j.prep && !prepped(j.prep)) return (b ? pretty(b.name) : "DeepSeek") + " · prep";
-    return /^fine-tune of /.test(String(j.model)) ? "Fine-tune" + (b ? " · " + pretty(b.name) : "") : "Classic model";
-  }
-
-  // Why a job can't train yet, from the node (GET /status), cut to one plain line; the node's own words open below it.
-  function whyShort(text, id) {
-    var t = String(text), q = /needs (\d+) staked workers? with ([\d.]+) (GB|MB) of GPU memory each[\s\S]*?and (\d+) registered/.exec(t);
-    if (q) {
-      var have = +q[4], more = Math.max(1, +q[1] - have), gb = Math.max(1, Math.ceil(q[3] === "GB" ? +q[2] : +q[2] / 1024));
-      return "Needs " + more + (have ? " more" : "") + " staked worker" +
-        (more === 1 ? " with " + (/^8|^1[18]$/.test(String(gb)) ? "an " : "a ") + gb + " GB GPU" : "s with " + gb + " GB GPUs");
-    }
-    if (t.indexOf("job " + id + " ") === 0) t = t.slice(id.length + 5);
-    t = t.replace(/^waits: (it )?/, "").split(/; | \(|\. /)[0];
-    if (t.length > 90) t = t.slice(0, 88).replace(/\s+\S*$/, "") + "…";
-    return t.charAt(0).toUpperCase() + t.slice(1);
-  }
-  function whyLines(parent, text, id, key) {
-    var p = el("p", "why"), full = el("p", "why-full", text), b = el("button", "linkbtn", "Why?");
-    full.id = "why-" + key; full.hidden = !WHY[id];
-    b.type = "button"; b.setAttribute("aria-expanded", String(!!WHY[id])); b.setAttribute("aria-controls", full.id); b.setAttribute("data-key", "why-" + key);
-    b.addEventListener("click", function () { WHY[id] = !WHY[id]; full.hidden = !WHY[id]; b.setAttribute("aria-expanded", String(!!WHY[id])); });
-    p.appendChild(document.createTextNode(whyShort(text, id) + " ")); p.appendChild(b);
-    parent.appendChild(p); parent.appendChild(full);
-  }
-
-  function factsOf(j, net) {
-    var f = [], n = num(j.rounds_trained) || 0, u = num(j.units) || 0, esc = num(j.escrow) || 0, fee = num(j.fee_per_round), on = here(j, net);
-    f.push(n ? count(n, "round") + " trained" : "no rounds trained yet");
-    if (u) f.push(count(u, "unit") + " accepted");
-    if (j.last_trained && num(j.last_trained.time) != null) f.push("last trained " + ago(net.now - j.last_trained.time));
-    if (j.status === "finished" || esc <= 0) f.push("budget spent");
-    else f.push(vibe(esc) + " left" + (fee > 0 ? ", about " + count(Math.floor(esc / fee), "round") + " of training" : ""));
-    if (j.status !== "finished") f.push(on ? count(on, "miner") + " on it now" : "no miners on it now");
-    return f.join(" · ");
-  }
-  // A fine-tune's last round shows in the next round's score, which a finished job never gets.
-  function unscored(j) { return j.status === "finished" ? "Its last round was never scored: the budget ran out first" : "Its latest round is scored the next time the job runs"; }
-  // "loss 5.13 → 3.65 (−29%)": where the held-back score started, where it is now, and whether that's better.
-  function headline(c, j) {
-    var box = el("div", "headline"), pts = c.points;
-    if (!pts.length) { box.appendChild(el("p", "metric-note", "No training scored yet")); return box; }
-    var a = pts[0][1], b = pts[pts.length - 1][1], m = el("p", "metric");
-    m.appendChild(el("span", null, (c.metric === "accuracy" ? "accuracy" : "loss") + " "));
-    m.appendChild(document.createTextNode(score(a, c.metric) + (pts.length > 1 ? " → " + score(b, c.metric) + " " : "")));
-    if (pts.length > 1) { var ch = change(a, b, c.metric); m.appendChild(el("b", "delta " + ch[1], "(" + ch[0] + ")")); }
-    box.appendChild(m);
-    box.appendChild(el("p", "metric-note", pts.length < 2 ? "Only one score so far, so no change to show yet" :
-      (c.metric === "accuracy" ? "Accuracy on held-back data: higher is better" : "Loss on held-back examples: lower is better") +
-      (c.pending ? ". " + unscored(j) : "")));
-    return box;
-  }
-
-  function jobCard(j, net, waiting) {
-    var id = String(j.id), key = uid(id), c = curveOf(j), card = el("article", "job"), left = el("div");
-    if (ID_OK.test(id)) card.id = "job-" + id;
-    card.setAttribute("data-anchor", key);
-    left.appendChild(el("p", "kind", kindOf(j)));
-    left.appendChild(el("h4", "job-title", id));
-    if (j.model != null && !/^fine-tune of /.test(String(j.model))) left.appendChild(el("p", "quiet", String(j.model)));
-    left.appendChild(headline(c, j));
-    left.appendChild(el("p", "facts", factsOf(j, net)));
-    var why = own(waiting, id);
-    if (typeof why === "string") whyLines(left, why, id, key);
-    var bar = el("div", "job-actions");
-    bar.appendChild(reportButton(card, j, net, key, false));
-    left.appendChild(bar);
-    card.appendChild(left);
-    var s = spark(thin(c.points, 48), c.metric);
-    if (s) {
-      var right = el("div"); right.appendChild(s);
-      var cap = el("p", "spark-cap"); cap.appendChild(el("span", null, "start")); cap.appendChild(el("span", null, "now"));
-      right.appendChild(cap); card.appendChild(right);
-    }
-    if (OPEN[id]) card.appendChild(report(j, net, key, false));
-    return card;
-  }
-
-  function reportButton(card, j, net, key, feat) {
-    var id = String(j.id), b = el("button", "btn");
-    b.type = "button"; b.setAttribute("data-key", "rep-" + key);
-    function show() {
-      b.textContent = OPEN[id] ? "Hide report" : "Report";
-      b.setAttribute("aria-expanded", String(!!OPEN[id]));
-      if (OPEN[id]) b.setAttribute("aria-controls", "rep-" + key); else b.removeAttribute("aria-controls");
-    }
-    show();
-    b.addEventListener("click", function () {
-      OPEN[id] = !OPEN[id];
-      var old = card.querySelector(".report");
-      if (old) old.parentNode.removeChild(old);
-      if (OPEN[id]) {
-        card.appendChild(report(j, net, key, feat));
-        var c = own(JOBS, id);
-        if (!c || !c.data) fetchJob(id, j);
-      }
-      show();
-      if (ID_OK.test(id) && history.replaceState) {  // the address follows the open report, so it can be shared
-        if (OPEN[id]) history.replaceState(null, "", "#job-" + id);
-        else if (location.hash === "#job-" + id) history.replaceState(null, "", location.pathname + location.search);
-      }
-    });
-    return b;
-  }
-
-  // Reads a job's rounds, settings and model (GET /job/<id>), keeps them, and redraws the jobs when they're in.
-  function fetchJob(id, j) {
-    var c = own(JOBS, id);
-    if (!c) c = JOBS[id] = { data: null, error: false, busy: false };
-    if (c.busy) return;
-    c.busy = true;
-    fetch(NODE + "/job/" + encodeURIComponent(id), { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (d) {
-        if (!d || typeof d !== "object" || !Array.isArray(d.rounds)) throw new Error("not a job");
-        var spec = d.spec && typeof d.spec === "object" ? d.spec : {};
-        var rounds = d.rounds.filter(function (r) { return r && typeof r === "object" && num(r.height) != null; });
-        c.data = d; c.spec = spec; c.error = false;
-        c.training = trainingOf(rounds, "base" in spec ? "loss" : "accuracy");
-        c.trainedAt = j && j.last_trained ? j.last_trained.height : null;
-      })
-      .catch(function () { c.error = true; })
-      .then(function () { c.busy = false; if (last) renderJobs(); });
-  }
-
-  // The report: the curve, the rounds that changed the model, its settings in plain words, and commands to follow it.
-  function report(j, net, key, feat) {
-    var id = String(j.id), c = own(JOBS, id), box = el("div", "report"), h = feat ? "h4" : "h5";
-    box.id = "rep-" + key;
-    if (!c || !c.data) {
-      box.appendChild(el("p", "report-note", c && c.error ? "Couldn't read this job's rounds from the network just now. Trying again with the next update." : "Reading this job's rounds from the network…"));
-      return box;
-    }
-    if (c.error) box.appendChild(el("p", "report-note", "Couldn't refresh this report just now, so it shows the rounds read before."));
-    var t = c.training, d = c.data, acc = t.metric === "accuracy";
-
-    var curve = el("div", "r-sec");
-    curve.setAttribute("data-anchor", key + "-chart");
-    curve.appendChild(el(h, "r-head", (acc ? "Accuracy on held-back data" : "Loss on held-back examples") + ", round by round"));
-    if (t.points.length > 1) {
-      curve.appendChild(bigChart(t.points, t.metric));
-      curve.appendChild(el("p", "report-note", "Each dot is a round that changed the model" +
-        (t.points.length > 200 ? " (200 of its " + int(t.points.length) + ", spread evenly)" : "") + ". " + (acc ? "Higher is better." : "Lower is better.") +
-        (t.pending ? " " + unscored(j) + "." : "")));
-    } else {
-      curve.appendChild(el("p", "report-note", t.points.length ? "One score so far, before any training, so there's no curve to draw yet." : "No training scored yet."));
-    }
-    box.appendChild(curve);
-
-    var grid = el("div", "report-grid"), rs = el("div", "r-sec");
-    rs.setAttribute("data-anchor", key + "-rounds");
-    rs.appendChild(el(h, "r-head", "Rounds that changed the model"));
-    if (t.steps.length) {
-      var holder = el("div", "table-wrap");
-      holder.appendChild(roundsTable(t, !!MORE[id], j));
-      rs.appendChild(holder);
-      if (t.steps.length > 20) {
-        var more = el("button", "linkbtn");
-        more.type = "button"; more.setAttribute("data-key", "more-" + key);
-        var sync = function () { more.textContent = MORE[id] ? "Show the latest 20" : "Show all " + int(t.steps.length); more.setAttribute("aria-expanded", String(!!MORE[id])); };
-        sync();
-        more.addEventListener("click", function () {
-          MORE[id] = !MORE[id];
-          holder.textContent = ""; holder.appendChild(roundsTable(t, MORE[id], j)); sync();
-          if (!MORE[id]) more.scrollIntoView({ block: "nearest" });
-        });
-        var p = el("p"); p.appendChild(more); rs.appendChild(p);
-      }
-      rs.appendChild(el("p", "report-note", int(t.steps.length) + " of its " + count(t.rounds, "round") + " changed the model; in the rest, no unit was accepted."));
-      grid.appendChild(rs);
-    } else {  // nothing to list: say so under the chart, and give the settings the left column
-      curve.appendChild(el("p", "report-note", t.rounds ? "None of its " + count(t.rounds, "round") + " so far has changed the model." : "It hasn't had a round yet."));
-    }
-
-    var col = el("div", "r-col"), about = el("div", "r-sec");
-    about.setAttribute("data-anchor", key + "-about");
-    about.appendChild(el(h, "r-head", "How it's set up"));
-    about.appendChild(settingsList(c.spec, d));
-    if (t.steps.length) col.appendChild(about); else grid.appendChild(about);
-    var prep = j.prep;
-    if (prep && Array.isArray(prep.done)) {
-      var ps = el("div", "r-sec"), ready = prep.done.filter(function (x) { return x >= 1; }).length;
-      ps.appendChild(el(h, "r-head", "Preparing the frozen layers"));
-      ps.appendChild(el("p", null, int(num(prep.pieces_done) || 0) + " of " + int(num(prep.pieces_total) || 0) + " pieces done · " +
-        ready + " of " + prep.done.length + " layers ready" + (num(prep.miners) ? " · " + count(prep.miners, "miner") + " on it lately" : "")));
-      if (!feat) ps.appendChild(layerBars(prep));  // the featured card draws them already
-      col.appendChild(ps);
-    }
-    var cmds = el("div", "r-sec");
-    cmds.appendChild(el(h, "r-head", "Follow it from your computer"));
-    cmds.appendChild(commands(id, key));
-    col.appendChild(cmds);
-    grid.appendChild(col);
-    box.appendChild(grid);
-    return box;
-  }
-
-  function roundsTable(t, all, j) {
-    var tbl = el("table", "rounds"), head = el("tr"), thead = el("thead"), body = el("tbody"), steps = t.steps.slice().reverse();
-    if (!all) steps = steps.slice(0, 20);
-    ["Round", "Units", (t.metric === "accuracy" ? "Accuracy" : "Loss") + " after", "Change"].forEach(function (name) {
-      var th = el("th", null, name); th.scope = "col"; head.appendChild(th);
-    });
-    thead.appendChild(head); tbl.appendChild(thead);
-    steps.forEach(function (s) {
-      var tr = el("tr");
-      tr.appendChild(el("td", null, "#" + int(s.height)));
-      tr.appendChild(el("td", null, int(s.units)));
-      tr.appendChild(el("td", null, s.value != null ? score(s.value, t.metric) : s.shared ? "with the next" : j.status === "finished" ? "never scored" : "scored next run"));
-      tr.appendChild(el("td", s.change ? s.change[1] : "quiet", s.change ? s.change[0] : "–"));
-      body.appendChild(tr);
-    });
-    tbl.appendChild(body);
-    return tbl;
-  }
-
-  function settingsList(spec, d) {
-    var dl = el("dl", "settings"), b = baseOf(spec.base), lora = spec.lora && typeof spec.lora === "object" ? spec.lora : null;
-    var m = spec.model && typeof spec.model === "object" ? spec.model : {}, mm = d.model && typeof d.model === "object" ? d.model : {};
-    function row(label, value) {
-      dl.appendChild(el("dt", null, label));
-      var dd = el("dd");
-      if (typeof value === "string") dd.textContent = value; else dd.appendChild(value);
-      dl.appendChild(dd);
-    }
-    function n(x) { return num(x) != null; }
-    if (b) {
-      if (b.url) {
-        var v = el("span"), a = el("a", null, b.full);
-        a.href = b.url; a.rel = "noopener";
-        v.appendChild(a); v.appendChild(document.createTextNode(" at " + b.commit.slice(0, 7)));
-        row("Base model", v);
-      } else row("Base model", b.full);
-    } else if (n(m.n_in) && n(m.n_out) && Array.isArray(m.n_hidden)) {
-      row("Layer sizes", int(m.n_in) + " inputs → " + m.n_hidden.filter(n).map(int).concat([int(m.n_out) + " classes"]).join(" → "));
-    }
-    if (lora) {
-      var targets = Array.isArray(lora.targets) ? lora.targets.filter(function (x) { return typeof x === "string"; }) : [];
-      row("Add-on", "LoRA" + (n(lora.rank) ? ", rank " + lora.rank : "") + (n(lora.alpha) ? ", alpha " + lora.alpha : "") + (targets.length ? ", on " + targets.join(", ") : ""));
-    }
-    if (n(spec.seq_len)) row("Sequence length", count(spec.seq_len, "token"));
-    if (n(spec.batch_size)) row("Batch", count(spec.batch_size, b ? "sequence" : "example"));
-    if (n(spec.steps_per_unit)) row("Steps a unit", int(spec.steps_per_unit));
-    if (n(spec.units_per_round)) row("Units a round", int(spec.units_per_round));
-    if (n(spec.lr)) row("Learning rate", String(spec.lr));
-    if (n(spec.fee_per_round)) row("Fee a round", vibe(spec.fee_per_round));
-    if (typeof d.owner === "string") { var o = el("code", null, short(d.owner)); o.title = d.owner; row("Owner", o); }
-    if (n(mm.bytes)) row("Trained model", bytes(mm.bytes) + (n(mm.height) ? ", as of block #" + int(mm.height) : ""));
-    if (typeof mm.sha256 === "string") { var s = el("code", null, mm.sha256.length > 20 ? mm.sha256.slice(0, 12) + "…" + mm.sha256.slice(-6) : mm.sha256); s.title = mm.sha256; row("Its sha256", s); }
-    return dl;
-  }
-
-  // A command a word at a time, so a long one wraps between words and never after the hyphen of "--csv".
-  function cmdWords(code) {
-    code.textContent = "";
-    vhText(code.dataset.cmd).split(" ").forEach(function (w, i) { if (i) code.appendChild(document.createTextNode(" ")); code.appendChild(el("span", null, w)); });
-  }
-  function commands(id, key) {
-    var box = el("div", "cmds");
-    if (!ID_OK.test(id)) { box.appendChild(el("p", "report-note", "This job's id isn't one a command line can take safely, so there's nothing to copy.")); return box; }
-    [["watch", "job watch " + id], ["history", "job history " + id + " --csv " + id + ".csv"], ["download", "job download " + id]].forEach(function (x, i) {
-      var row = el("div", "cmd"), code = el("code", "words"), b = el("button", "btn", "Copy");
-      code.dataset.cmd = x[1]; cmdWords(code);
-      b.type = "button"; b.setAttribute("aria-label", "Copy the " + x[0] + " command"); b.setAttribute("data-key", "copy-" + key + "-" + i);
-      b.addEventListener("click", function () {
-        if (navigator.clipboard) navigator.clipboard.writeText(code.textContent).then(function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1600); }, function () {});
-      });
-      row.appendChild(code); row.appendChild(b); box.appendChild(row);
-    });
-    box.appendChild(el("p", "report-note", "watch follows it live, history saves every round to a CSV file, and download saves the trained model."));
-    return box;
-  }
-
-  // The prep's assembly line: one bar per frozen layer, filled as its pieces are accepted, then the trained top layers.
-  function layerBars(prep) {
-    var box = el("div", "r-sec"), layers = el("div", "layers");
-    layers.setAttribute("role", "img");
-    layers.setAttribute("aria-label", "Prepared: " + prep.done.filter(function (x) { return x >= 1; }).length + " of " + prep.done.length + " frozen layers");
-    prep.done.forEach(function (f) { var c = el("i"), b = el("b"); b.style.height = Math.round(100 * Math.min(1, num(f) || 0)) + "%"; c.appendChild(b); layers.appendChild(c); });
-    for (var k = prep.done.length; k < 40; k++) layers.appendChild(el("i", "top"));
-    box.appendChild(layers);
-    var lc = el("p", "layer-cap");
-    lc.appendChild(el("span", null, "Layer 1")); lc.appendChild(el("span", null, "the top " + Math.max(0, 40 - prep.done.length) + " are trained by miners"));
-    box.appendChild(lc);
-    return box;
-  }
-
-  // The report's chart: the score after each round that changed the model, one dot each (at most 200), with the range
-  // on the left and the first and last rounds below. Pointing at it reads a point out; the table has every value.
-  function bigChart(points, metric) {
-    var ns = "http://www.w3.org/2000/svg", W = 600, H = 200, P = 10, pts = thin(points, 200), n = pts.length;
-    var vals = pts.map(function (p) { return p[1]; }), lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
-    if (hi - lo < 1e-9) { var pad = Math.abs(hi) * 0.05 || 0.05; lo -= pad; hi += pad; }
-    var xy = pts.map(function (p, i) { return [P + i / (n - 1) * (W - 2 * P), P + (hi - p[1]) / (hi - lo) * (H - 2 * P)]; });
-    var fig = el("figure", "chart"), ys = el("div", "chart-y"), plot = el("div", "chart-plot"), xs = el("div", "chart-x");
-    ys.appendChild(el("span", null, score(hi, metric))); ys.appendChild(el("span", null, score(lo, metric)));
-    var svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.setAttribute("preserveAspectRatio", "none"); svg.setAttribute("aria-hidden", "true");
-    function add(tag, attrs) { var e = document.createElementNS(ns, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; }
-    function dot(q) { return "M" + q[0].toFixed(1) + "," + q[1].toFixed(1) + "h0"; }  // a zero-length line with round caps: a dot that stays round
-    var line = xy.map(function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" ");
-    [P, H - P].forEach(function (y) { add("line", { x1: 0, x2: W, y1: y, y2: y, stroke: "var(--rule)", "vector-effect": "non-scaling-stroke" }); });
-    add("polygon", { points: xy[0][0] + "," + (H - P) + " " + line + " " + xy[n - 1][0] + "," + (H - P), fill: "var(--gold-wash)" });
-    add("polyline", { points: line, fill: "none", stroke: "var(--signal)", "stroke-width": 2, "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" });
-    var from = pts[0][3] ? 1 : 0, size = n > 60 ? 5 : 8;
-    if (from) add("path", { d: dot(xy[0]), fill: "none", stroke: "var(--ink-2)", "stroke-width": size, "stroke-linecap": "round", "vector-effect": "non-scaling-stroke" });
-    add("path", { d: xy.slice(from).map(dot).join(""), fill: "none", stroke: "var(--gold)", "stroke-width": size, "stroke-linecap": "round", "vector-effect": "non-scaling-stroke" });
-    plot.appendChild(svg);
-    var cross = el("i", "chart-cross"), ring = el("i", "chart-ring"), tip = el("span", "chart-tip");
-    cross.hidden = ring.hidden = tip.hidden = true;
-    plot.appendChild(cross); plot.appendChild(ring); plot.appendChild(tip);
-    function point(e) {
-      var r = plot.getBoundingClientRect(), i = Math.round(((e.clientX - r.left) / r.width * W - P) / (W - 2 * P) * (n - 1));
-      i = Math.max(0, Math.min(n - 1, i));
-      var x = xy[i][0] / W * 100, y = xy[i][1] / H * 100;
-      cross.style.left = ring.style.left = tip.style.left = x + "%";
-      ring.style.top = tip.style.top = y + "%";
-      tip.style.transform = "translate(" + (x < 20 ? "0" : x > 80 ? "-100%" : "-50%") + ", " + (y > 45 ? "calc(-100% - 12px)" : "12px") + ")";
-      tip.textContent = ""; tip.appendChild(el("b", null, score(pts[i][1], metric))); tip.appendChild(document.createTextNode(" " + pts[i][2]));
-      cross.hidden = ring.hidden = tip.hidden = false;
-    }
-    plot.addEventListener("pointermove", point); plot.addEventListener("pointerdown", point);
-    plot.addEventListener("pointerleave", function () { cross.hidden = ring.hidden = tip.hidden = true; });
-    xs.appendChild(el("span", null, "round #" + int(pts[0][0]))); xs.appendChild(el("span", null, "round #" + int(pts[n - 1][0])));
-    fig.appendChild(ys); fig.appendChild(plot); fig.appendChild(xs);
-    return fig;
-  }
-
-  // ---- the featured job: what it's for is written here; how it's going comes from the node ----
-  var FEATURED = [{
-    match: "think-shorter",
-    title: "Teaching DeepSeek V4.1 Flash to think shorter",
-    short: "DeepSeek V4.1 Flash learns to think shorter",
-    blurb: "Long thinking is what makes answers slow. Miners' gaming PCs are training an add-on that teaches DeepSeek V4.1 Flash to reach the right answer in a few short steps. Nobody holds the whole 510 GB model: its bottom 36 layers are prepared once, in pieces anyone can run, and miners train the top 4.",
-    // The first job is the pilot: 1,500 GSM8K training problems, scored on 500 held back (docs/datasets/think-shorter.md).
-    examples: 1500, heldBack: 500, unit: "problems",
-    sample: { q: "Twice Angie's age, plus 4, is 20. How old is Angie?",
-              think: "Twice Angie's age is 20-4=16. Angie is 16/2=8.",
-              a: "The answer is 8.", source: "One of the pilot's training problems, from GSM8K (MIT licence)" }
-  }];
-  function infoFor(j) {
-    for (var i = 0; i < FEATURED.length; i++) { if (j.id.indexOf(FEATURED[i].match) >= 0) return FEATURED[i]; }
-    return null;
-  }
-  function pickFeatured(jobs) {
-    var tuned = jobs.filter(function (j) { return /^fine-tune/.test(j.model) && (j.status !== "finished" || infoFor(j)); });
-    return tuned.filter(infoFor)[0] || tuned[0] || null;
-  }
-  function times(r) { return (r < 10 ? r.toFixed(2) : r.toFixed(1)) + "×"; }
-
-  function featuredCard(j, net, waiting) {
-    var id = String(j.id), key = uid(id), info = infoFor(j), on = here(j, net), prep = j.prep, base = baseOf(j.model);
-    var stage = j.status === "finished" ? "done" : !prepped(prep) ? "prep" : "train";
-    var c = curveOf(j), pts = c.points, start = pts.length ? pts[0][1] : null, now = pts.length ? pts[pts.length - 1][1] : null;
-    var card = el("article", "feat"), head = el("div", "feat-head");
-    if (ID_OK.test(id)) card.id = "job-" + id;
-    card.setAttribute("data-anchor", key);
-    head.appendChild(el("p", "feat-eyebrow", "Featured job · " + kindOf(j)));
-    var top = el("div", "job-top");
-    top.appendChild(el("h3", null, info ? info.title : "Fine-tuning " + (base ? base.full : String(j.model).replace(/^fine-tune of /, ""))));
-    var pill = stage === "done" ? ["", "Finished"] : stage === "prep" ? ["waiting", "Preparing"] : on ? ["training", "Training now"] : ["waiting", "Waiting for miners"];
-    top.appendChild(el("span", "pill " + pill[0], pill[1]));
-    head.appendChild(top);
-    if (info) head.appendChild(el("p", "quiet", info.blurb));
-    var names = prep ? [["prep", "Prepare the frozen layers"], ["train", "Train the top layers"], ["done", "Done"]] : [["train", "Train"], ["done", "Done"]];
-    var at = names.map(function (n) { return n[0]; }).indexOf(stage), stages = el("ol", "stages");
-    names.forEach(function (n, i) { stages.appendChild(el("li", i < at ? "past" : i === at ? "now" : "", (i < at ? "✓ " : "") + n[1])); });
-    head.appendChild(stages);
-    card.appendChild(head);
-
-    var grid = el("div", "feat-grid");
-    // How it's improving: the held-back score, said plainly.
-    var imp = el("div", "panel");
-    imp.appendChild(el("h4", null, "How it's improving"));
-    if (j.metric === "loss" && pts.length > 1 && start > now) {
-      var r = Math.exp(start - now);
-      imp.appendChild(el("p", "big", times(r)));
-      imp.appendChild(el("p", null, (info ? "Short, correct worked solutions" : "Its target answers") + " are now " + times(r) +
-        " as likely, token by token, as before training, on " + (info ? int(info.heldBack) + " " + info.unit : "held-back examples") +
-        " it has never trained on."));
-      imp.appendChild(el("p", "quiet", "Held-back loss " + start.toFixed(3) + " → " + now.toFixed(3) + " (lower is better)"));
-    } else if (j.metric === "accuracy" && now != null) {
-      imp.appendChild(el("p", "big", Math.round(now * 100) + "%"));
-      imp.appendChild(el("p", null, "accuracy on held-back data" + (pts.length > 1 && start < now ? ", up from " + Math.round(start * 100) + "%" : "")));
-    } else {
-      imp.appendChild(el("p", "quiet", stage === "prep" ? "Training starts once the frozen layers are prepared. Scores show up here after its first rounds." : "Scores show up here after the first rounds."));
-    }
-    var s = spark(thin(pts, 48), j.metric);
-    if (s) {
-      imp.appendChild(s);
-      var cap = el("p", "spark-cap"); cap.appendChild(el("span", null, "start")); cap.appendChild(el("span", null, "now")); imp.appendChild(cap);
-    }
-    grid.appendChild(imp);
-
-    // Progress: the prep's assembly line, then training.
-    var prog = el("div", "panel");
-    prog.appendChild(el("h4", null, "Progress"));
-    if (prep && Array.isArray(prep.done)) {
-      prog.appendChild(layerBars(prep));
-      prog.appendChild(el("p", null, int(prep.pieces_done) + " of " + int(prep.pieces_total) + " prep pieces done" +
-        (prep.miners ? ", by " + int(prep.miners) + " miner" + (prep.miners === 1 ? "" : "s") : "")));
-    }
-    if (j.examples != null && stage !== "prep") {
-      var total = info && info.examples, passes = total ? j.examples / total : null;
-      if (total) { var bar = el("div", "progress"), fill = el("i"); fill.style.width = Math.round(100 * Math.min(1, passes)) + "%"; bar.appendChild(fill); prog.appendChild(bar); }
-      prog.appendChild(el("p", null, int(j.examples) + " " + (info ? info.unit : "examples") + " studied" +
-        (passes != null ? ", " + passes.toFixed(2) + " passes through all " + int(total) : "")));
-    }
-    var facts = [on ? int(on) + " miner" + (on === 1 ? "" : "s") + " on it now" : "no miners on it right now"];
-    if (j.rounds_trained) facts.push(int(j.rounds_trained) + " rounds trained");
-    if (j.last_trained && j.last_trained.time) facts.push("last trained " + ago(net.now - j.last_trained.time));
-    if (j.escrow > 0) facts.push(vibe(j.escrow) + " left to pay miners");
-    prog.appendChild(el("p", "quiet", facts.join(" · ")));
-    var why = own(waiting, id);
-    if (typeof why === "string") whyLines(prog, why, id, key);
-    grid.appendChild(prog);
-    card.appendChild(grid);
-
-    // What it's learning from: one real training example.
-    if (info && info.sample) {
-      var chat = el("div", "chat");
-      chat.appendChild(el("h4", null, "What it's learning from"));
-      chat.appendChild(el("div", "bubble q", info.sample.q));
-      var a = el("div", "bubble a"), t = el("p", "think");
-      t.appendChild(el("b", null, "Thinking")); t.appendChild(document.createTextNode(info.sample.think));
-      a.appendChild(t); a.appendChild(el("p", null, info.sample.a));
-      chat.appendChild(a);
-      chat.appendChild(el("p", "source", info.sample.source));
-      card.appendChild(chat);
-    }
-    var bar = el("div", "job-actions");
-    bar.appendChild(reportButton(card, j, net, key, true));
-    card.appendChild(bar);
-    if (OPEN[id]) card.appendChild(report(j, net, key, true));
-    return card;
-  }
-
-  // The jobs after the featured one, by state. A job that miners worked on in the last 10 minutes is training now, even
-  // between its turns; one the node says can't train (GET /status) is waiting; the others take turns until finished.
-  var GROUPS = [
-    ["training", "Training now", "Miners are working on these, this round or in the last 10 minutes."],
-    ["waiting", "Waiting", "Funded, but they can't train until enough workers who fit them sign up."],
-    ["queued", "Queued", "Funded and taking turns with the other jobs: each trains when its turn comes and miners are on."],
-    ["finished", "Finished", "Their budget is spent and their models are trained."]
+  // ---- CLI cards: real commands, each linked to its section of docs/CLI.md ----
+  var DOC = "https://github.com/AlphaChad5000/vibehash/blob/main/docs/CLI.md#";
+  var CLI = [
+    ["Wallet", "vibehash wallet create", "Make a wallet and show its 24 recovery words once.", "vibehash-wallet-create"],
+    ["Mine", "vibehash worker", "Train and check other workers' results, with the live dashboard. --job picks one job.", "vibehash-worker"],
+    ["Readiness", "vibehash selftest", "A real training test, your GPUs, the node, the clock, disk space, and what this computer can take.", "vibehash-selftest"],
+    ["Node", "vibehash node --genesis G --wallet W --data-dir D", "Run a node: serve the chain to workers, and validate if its wallet is a validator.", "vibehash-node"],
+    ["Validator", "vibehash validator join", "Announce your wallet as a validator. It needs 100 VIBE staked.", "vibehash-validator-join"],
+    ["Train", "vibehash train fruit.csv", "Train a model on a CSV file: posts it as a job for the network to train.", "vibehash-train"],
+    ["Follow a job", "vibehash job watch JOB", "Accuracy climbing round by round, budget left and events, until the budget is spent.", "vibehash-job-watch"],
+    ["Evo Hash", "vibehash evo export", "Save an Evo Hash job's model (the tuned Qwen) as a Hugging Face folder.", "vibehash-evo-export"],
+    ["Audit", "vibehash chain verify", "Download every block, re-check it from genesis, and replay every round.", "vibehash-chain-verify"]
   ];
-  function groupOf(j, net, waiting) {
-    if (j.status === "finished") return "finished";
-    if (here(j, net) > 0) return "training";
-    if (typeof own(waiting, String(j.id)) === "string") return "waiting";
-    return j.status === "training" ? "training" : "queued";
-  }
+  $("cli-cards").innerHTML = CLI.map(function (c) {
+    return '<a href="' + DOC + c[3] + '" class="group rounded-xl border border-rule bg-ink2 p-5 grid gap-2 content-start no-underline text-fg hover:border-white/30">' +
+      '<span class="font-mono text-[0.7rem] font-semibold tracking-wider uppercase text-mute">' + esc(c[0]) + '</span>' +
+      '<code class="font-mono text-[0.88rem] text-fg break-words"><span class="text-signal">&gt;</span> ' + esc(c[1]) + '</code>' +
+      '<span class="text-[0.92rem] text-mute">' + esc(c[2]) + '</span><span class="text-sm text-dim group-hover:text-fg">docs/CLI.md →</span></a>';
+  }).join("");
 
-  // Redrawing replaces the cards, so keep the reader's place and focus: the first card or report section that starts on
-  // screen (or else the first one showing) stays where it was, and a focused control is focused again.
-  function keep(draw) {
-    var anchor = null, top = 0, f = document.activeElement, fkey = f && f.getAttribute ? f.getAttribute("data-key") : null;
-    var all = document.querySelectorAll("[data-anchor]"), i, r;
-    for (i = 0; i < all.length && anchor == null; i++) { r = all[i].getBoundingClientRect(); if (r.top >= 0 && r.top < innerHeight) { anchor = all[i].getAttribute("data-anchor"); top = r.top; } }
-    for (i = 0; i < all.length && anchor == null; i++) { r = all[i].getBoundingClientRect(); if (r.bottom > 0 && r.top < innerHeight) { anchor = all[i].getAttribute("data-anchor"); top = r.top; } }
-    draw();
-    var n = anchor && document.querySelector('[data-anchor="' + anchor + '"]');  // anchors and keys are uid()s: plain
-    if (n) { var d = n.getBoundingClientRect().top - top; if (Math.abs(d) >= 1) window.scrollBy(0, d); }
-    var g = fkey && document.querySelector('[data-key="' + fkey + '"]');
-    if (g && g !== document.activeElement) g.focus({ preventScroll: true });
+  // ---- the live testnet ----
+  function flopParts(n) {
+    var u = ["FLOP", "kFLOP", "MFLOP", "GFLOP", "TFLOP", "PFLOP", "EFLOP"], i = 0;
+    while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; }
+    return [n.toLocaleString("en-US", { maximumFractionDigits: n < 10 ? 2 : n < 100 ? 1 : 0 }), u[i]];
   }
-
-  // #job-<id> opens that job's report once it's on the page.
-  function readHash() {
-    if (location.hash.indexOf("#job-") !== 0) return null;
-    try { return decodeURIComponent(location.hash.slice(5)); } catch (e) { return null; }
-  }
-  wanted = readHash();
-  window.addEventListener("hashchange", function () { wanted = readHash(); if (last && wanted != null) renderJobs(); });
-
-  function renderJobs() {
-    var net = last.net, waiting = last.waiting, feat = pickFeatured(net.jobs), target = null;
-    if (wanted != null) net.jobs.forEach(function (j) { if (String(j.id) === wanted) target = j; });
-    if (target) {
-      OPEN[wanted] = true;
-      if (target.status === "finished") finishedOpen = true;
-      if (!own(JOBS, wanted)) fetchJob(wanted, target);
-      wanted = null;
-    }
-    keep(function () {
-      var slot = $("featured"), box = $("jobs"), by = { training: [], waiting: [], queued: [], finished: [] };
-      slot.textContent = ""; box.textContent = "";
-      if (feat) slot.appendChild(featuredCard(feat, net, waiting));
-      net.jobs.forEach(function (j) { if (j !== feat && (j.status !== "finished" || num(j.rounds_trained))) by[groupOf(j, net, waiting)].push(j); });
-      GROUPS.forEach(function (g) {
-        var list = by[g[0]];
-        if (!list.length) return;
-        list.sort(function (a, b) { return here(b, net) - here(a, net) || ((b.last_trained || {}).height || 0) - ((a.last_trained || {}).height || 0); });
-        var fin = g[0] === "finished", sec = el(fin ? "details" : "div", "group " + g[0]), head = el(fin ? "summary" : "div", "group-head");
-        sec.setAttribute("data-anchor", "g-" + g[0]);
-        head.appendChild(el("h3", null, g[1])); head.appendChild(el("span", "count", count(list.length, "job")));
-        sec.appendChild(head);
-        sec.appendChild(el("p", "group-note", g[2]));
-        var cards = el("div", "jobs-list");
-        list.forEach(function (j) { cards.appendChild(jobCard(j, net, waiting)); });
-        sec.appendChild(cards);
-        if (fin) {
-          head.setAttribute("data-key", "g-finished");
-          sec.open = finishedOpen;
-          sec.addEventListener("toggle", function () { finishedOpen = sec.open; });
-        }
-        box.appendChild(sec);
-      });
-    });
-    if (target) { var n = ID_OK.test(String(target.id)) && $("job-" + target.id); if (n) n.scrollIntoView({ block: "start" }); }
-  }
-
+  function ago(s) { s = Math.max(0, Math.round(s)); return s < 60 ? s + " s ago" : s < 3600 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago"; }
   function render(net, status) {
-    var m = net.miners;
-    net.jobs = Array.isArray(net.jobs) ? net.jobs : [];
-    $("s-online").textContent = int(m.online);
-    $("s-day").textContent = int(m.day);
-    var work = $("s-work"), fp = flopParts(m.flops_day);
-    work.textContent = m.flops_day ? fp[0] : "None yet";
-    if (m.flops_day) work.appendChild(el("span", null, fp[1]));
-    $("s-units").textContent = m.units_day ? int(m.units_day) + " units checked and paid" : "in the last 24 hours";
+    var m = net.miners || {};
     $("s-height").textContent = "#" + int(net.height);
-    $("s-blocktime").textContent = (m.block_time ? "one every " + Math.round(m.block_time) + " s · " : "") + "last " + ago(net.now - net.time);
-    $("empty").hidden = m.online > 0;
-    var feat = pickFeatured(net.jobs), info = feat && infoFor(feat), base = feat && baseOf(feat.model), now = $("now");
-    now.hidden = !feat || feat.status === "finished";
-    if (feat) $("now-text").textContent = (prepped(feat.prep) ? "Now training: " : "Preparing: ") + (info ? info.short : base ? base.full : String(feat.model));
-    last = { net: net, waiting: status && status.waiting && typeof status.waiting === "object" ? status.waiting : {} };
-    renderJobs();
-    // Open reports refresh with each update; a fine-tune's rounds are read for its card only while the node's summary lags.
-    net.jobs.forEach(function (j) {
-      var id = String(j.id), c = own(JOBS, id);
-      if (OPEN[id] || (lagging(j) && (!c || c.trainedAt !== j.last_trained.height || (c.training && c.training.pending)))) fetchJob(id, j);
-    });
-    var list = $("miner-list"), top = m.top_miners || [], most = top.length ? top[0].flops : 0;
-    list.textContent = "";
-    top.forEach(function (t, i) {
-      var li = el("li"); li.appendChild(el("span", "quiet num", String(i + 1)));
-      var code = el("code", null, short(t.address)); code.title = t.address; li.appendChild(code);
-      var bar = el("span", "bar"), fill = el("i"); fill.style.width = (most ? 100 * t.flops / most : 0) + "%"; bar.appendChild(fill); li.appendChild(bar);
-      li.appendChild(el("span", "quiet num", flops(t.flops)));
-      list.appendChild(li);
-    });
-    $("miners").hidden = !top.length;
-    $("live").className = "live on";
-    $("live-text").textContent = "Live · " + (m.block_time ? "block every " + Math.round(m.block_time) + " s · " : "") + net.validators + " validator" + (net.validators === 1 ? "" : "s");
+    $("s-blocktime").textContent = (m.block_time ? "every " + Math.round(m.block_time) + " s · " : "") + "last " + ago(net.now - net.time);
+    $("s-online").textContent = int(m.online || 0);
+    $("s-day").textContent = int(m.day || 0);
+    var fp = flopParts(m.flops_day || 0);
+    $("s-work").textContent = m.flops_day ? fp[0] + " " + fp[1] : "0";
+    $("s-units").textContent = m.units_day ? int(m.units_day) + " units checked and paid" : "checked and paid";
+    if (net.subsidy) $("s-subsidy").textContent = (net.subsidy / SYN).toLocaleString("en-US", { maximumFractionDigits: 3 });
+    var jobs = Array.isArray(net.jobs) ? net.jobs : [], open = jobs.filter(function (j) { return j.status !== "finished"; });
+    $("s-jobs").textContent = int(jobs.length);
+    $("s-jobs-sub").textContent = open.length + " open · " + (jobs.length - open.length) + " finished";
+    if (m.block_time) $("how-blocktime").textContent = Math.round(m.block_time);
+    document.querySelectorAll('[data-live="validators"]').forEach(function (e) { e.textContent = net.validators; });
+    var byJob = m.online_by_job || {};
+    $("job-list").innerHTML = jobs.slice(0, 6).map(function (j) {
+      var on = byJob[j.id] || 0, st = String(j.status);
+      var col = st === "training" ? "text-good" : st === "finished" ? "text-dim" : "text-signal";
+      var res = j.metric === "accuracy" && j.now != null ? (j.start != null ? Math.round(j.start * 100) + "% → " : "") + Math.round(j.now * 100) + "% accuracy"
+        : j.prep && j.prep.pieces_total ? int(j.prep.pieces_done) + " of " + int(j.prep.pieces_total) + " pieces prepared" : j.rounds_trained ? int(j.rounds_trained) + " rounds" : "";
+      return '<div class="grid grid-cols-[6rem_minmax(0,1fr)_auto] sm:grid-cols-[6.5rem_minmax(0,1fr)_auto_auto] gap-x-4 items-baseline border-b border-rule/70 py-2 text-[0.95rem]">' +
+        '<span class="font-mono text-[0.72rem] font-semibold tracking-wider uppercase ' + col + '">● ' + esc(st) + '</span>' +
+        '<span class="font-mono text-[0.88rem] truncate" title="' + esc(j.model) + '">' + esc(j.id) + '</span>' +
+        '<span class="hidden sm:inline text-mute text-sm">' + esc(res) + '</span>' +
+        '<span class="text-mute text-sm tabular-nums">' + (st === "finished" ? int(j.units || 0) + " units" : on + " on it") + '</span></div>';
+    }).join("");
+    $("hero-dot").className = "w-2 h-2 rounded-full bg-good pulse-dot";
+    $("hero-live").textContent = "Testnet live · block #" + int(net.height) + " · " + int(m.online || 0) + " mining now";
+    $("b-node").textContent = "online"; $("b-node").className = "px-2 py-0.5 text-good";
+    $("b-block").textContent = "#" + int(net.height);
+    if (status) {
+      if (status.version) $("nav-version").textContent = status.version;
+      if (status.min_stake) document.querySelectorAll('[data-live="stake"]').forEach(function (e) { e.textContent = (status.min_stake / SYN).toLocaleString("en-US"); });
+    }
+    if (window.vhTerm) window.vhTerm.sync(net);
   }
-
   function load() {
-    var status = fetch(NODE + "/status", { cache: "no-store" })  // only for why a job waits: the page works without it
-      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    var status = fetch(NODE + "/status", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
     fetch(NODE + "/network", { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (net) { return status.then(function (s) { render(net, s); }); })
       .catch(function () {
-        $("live").className = "live";
-        $("live-text").textContent = "Can't reach the network right now; trying again shortly";
+        $("hero-dot").className = "w-2 h-2 rounded-full bg-dim";
+        $("hero-live").textContent = "Can't reach the testnet right now; trying again";
+        $("b-node").textContent = "unreachable"; $("b-node").className = "px-2 py-0.5 text-[#f28b7d]";
       });
   }
   load();
