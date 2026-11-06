@@ -129,7 +129,6 @@ export function Layout({ children, hero }: { children: ReactNode; hero?: ReactNo
       <TestnetBar />
       <MineBackground />
       <header className="relative glow-bg">
-        <div className="absolute inset-0 grid-bg pointer-events-none" aria-hidden="true" />
         <div className="relative max-w-6xl mx-auto px-4 md:px-8">
           <Nav />
           {hero}

@@ -40,7 +40,7 @@ export function MineBackground() {
     if (!cv) return;
     const still = !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     // The drill near the right edge, beside the content column rather than behind it.
-    const mine = new MineScene(cv, { still, drillAt: 0.86, dim: 0.5 });
+    const mine = new MineScene(cv, { still, drillAt: 0.86, dim: 0.4 });
     let laidW = 0, laidH = 0;
     const layout = () => {
       // Phones resize the viewport as their address bar slides; only a new width or a much taller screen redraws.
@@ -98,7 +98,7 @@ export function MineBackground() {
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
         <canvas ref={canvas} className="block" />
         {/* Dark behind the content column (1152 px wide), clearing toward the sides, where the mine shows through. */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgb(11 10 9 / 0.25) 0, rgb(11 10 9 / 0.9) max(0px, calc(50% - 520px)), rgb(11 10 9 / 0.9) min(100%, calc(50% + 520px)), rgb(11 10 9 / 0.25) 100%)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgb(11 10 9 / 0.15) 0, rgb(11 10 9 / 0.8) max(0px, calc(50% - 520px)), rgb(11 10 9 / 0.8) min(100%, calc(50% + 520px)), rgb(11 10 9 / 0.15) 100%)" }} />
       </div>
       <div className="border-b border-rule/70 bg-ink/70 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.72rem] tracking-wide text-mute">
