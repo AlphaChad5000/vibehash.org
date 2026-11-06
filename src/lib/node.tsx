@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-// The public testnet node. Every GET it answers carries Access-Control-Allow-Origin: *, so pages read it directly.
-// ?node=<url> points the site at another node (a local testnet, say).
-export const NODE = new URLSearchParams(location.search).get("node") || "https://node.vibehash.org";
+// The node's API, through the site's own /api/* (worker/index.ts on Cloudflare, vite.config.ts's proxy in dev), which
+// caches it for a few seconds. ?node=<url> reads another node directly instead (a local testnet, say): every GET a
+// node answers carries Access-Control-Allow-Origin: *.
+export const NODE = new URLSearchParams(location.search).get("node") || "/api";
 
 export interface Job {
   id: string; model: string; status: string; escrow: number; fee_per_round: number; rounds_trained: number;

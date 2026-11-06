@@ -33,13 +33,27 @@ npm run preview    # serves dist/
 - `src/components/`: layout (testnet bar, nav, footer), the terminal, live stats and job rows, the chart
 - `src/pages/`: one file per page
 
-## Deploy
+## Deploy (Cloudflare Workers)
 
-`.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`. It needs a one-time
-setting: **Settings → Pages → Build and deployment → Source: GitHub Actions**. Until that is switched, Pages keeps
-serving the branch as files, which no longer works now that the site needs a build.
+The site is one Worker, `vibehash-web` (`wrangler.jsonc`): `dist/` served as static assets, with `worker/index.ts`
+in front of `/api/*` only. That Worker passes the node's public GETs through and caches them for a few seconds
+(`/network` 10 s, `/status` 3 s), so visitors' polling doesn't all land on the node.
 
-Cloudflare Pages works too: build command `npm run build`, output directory `dist`.
+```sh
+npx wrangler login     # once
+npm run deploy         # build, then wrangler deploy
+npm run preview:cf     # the real Worker locally, at http://localhost:8787
+npm run types          # after changing wrangler.jsonc: regenerates worker-configuration.d.ts
+```
+
+- Preview: https://vibehash-web.vibe-hash.workers.dev (the Cache API does nothing on workers.dev, so `/api` isn't
+  cached there; it is on the real domain)
+- Production: add the `routes` shown in `wrangler.jsonc` and deploy. vibehash.org's DNS is already on Cloudflare.
+- Deploy on push: in the Cloudflare dashboard, Workers & Pages → vibehash-web → Settings → Builds → connect this
+  repository (build command `npm run build`, deploy command `npx wrangler deploy`).
+
+`.gitattributes` keeps Unix line endings on every checkout: `curl -fsSL https://vibehash.org/install.sh | sh` breaks
+on a script with Windows line endings, and Wrangler uploads the files as they are on disk.
 
 ## Posting jobs from the browser
 

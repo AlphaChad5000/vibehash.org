@@ -1,6 +1,15 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Static build for GitHub Pages / Cloudflare Pages: public/ (the guide, /network/, the installers, the whitepaper,
-// CNAME) is copied as it is; scripts/spa-fallback.mjs copies index.html to 404.html so /wallet, /jobs/… load the app.
-export default defineConfig({ plugins: [react()], build: { outDir: "dist", sourcemap: true } });
+// The app builds to dist/, which Cloudflare serves as static assets (wrangler.jsonc); public/ (the guide, /network/,
+// the installers, the whitepaper) is copied in as it is. In `npm run dev`, /api/* goes straight to the public node,
+// as worker/index.ts does in production (`npm run preview:cf` runs the real Worker locally).
+export default defineConfig({
+  plugins: [react()],
+  build: { outDir: "dist", sourcemap: true },
+  server: {
+    proxy: {
+      "/api": { target: "https://node.vibehash.org", changeOrigin: true, rewrite: (p) => p.replace(/^\/api/, "") }
+    }
+  }
+});
