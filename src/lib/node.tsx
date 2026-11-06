@@ -22,6 +22,7 @@ export interface Network {
 export interface Status {
   chain_id: string; height: number; phase: string; phase_ends: number; round: number; job_id: string | null;
   min_stake: number; min_fee: number; version: string; min_client: string; subsidy: number;
+  progress?: unknown; // [in, of] of what the phase waits for, when it waits for something (termui.parse_progress)
   waiting?: Record<string, string>;
 }
 export interface Account {

@@ -1,33 +1,13 @@
-/* The worker's dashboard, ported from vibehash/minerui.py and termui.py: the same banner, rock, tunnel, rails, ore cart
-   and drill, the same round and phase bar and lines. It replays one rig's rounds (register, compute, reveal, verify,
-   paid), with the round and block numbers taken from the live node. Over the terminal it adds smooth scrolling, spark
-   and coin particles, lantern glow and rolling cart wheels. It pauses off screen; reduced motion keeps it still. */
+/* The worker's dashboard, ported from vibehash/minerui.py and termui.py: the banner, the mine (mine.ts), the round and
+   phase bar and the lines under it. It replays one rig's rounds (register, compute, reveal, verify, paid), with the
+   round and block numbers taken from the live node. It pauses off screen; reduced motion keeps it still. */
 import type { Network } from "./node";
+import { MineScene } from "./mine";
 
 type Seg = [string, string | null] | { bar: number; fill: number; cls: string };
-type RGB = [number, number, number];
-interface Spark { x: number; y: number; vx: number; vy: number; t: number; life: number; c: RGB }
-interface Coin { x: number; y: number; vx: number; vy: number; t: number; life: number; ph: number }
-
-const STRATA: RGB[] = [[96, 66, 50], [128, 90, 62], [158, 118, 82], [116, 104, 94], [82, 76, 74]];
-const LIGHT = [1.1, 0.95, 0.78], SHADE = [1, 0.8, 0.6];
-const rgb = (a: RGB, k = 1) => `rgb(${Math.min(255, (a[0] * k) | 0)},${Math.min(255, (a[1] * k) | 0)},${Math.min(255, (a[2] * k) | 0)})`;
-const ROCK = STRATA.map((s) => LIGHT.map((l) => SHADE.map((d) => rgb(s, l * d))));
-const TIMBER = "rgb(168,112,58)", LAMP: RGB = [255, 214, 120], RAIL = "rgb(150,152,165)", TIE = "rgb(110,86,62)", CART = "rgb(176,116,60)";
-const GOLD = "rgb(255,200,50)", TEXTC = "rgb(205,212,220)", DIMC = "rgb(125,135,148)";
-const SPARKS: RGB[] = [[255, 225, 130], [255, 160, 60], [255, 250, 225], [255, 110, 40]];
 const BANNER = ["█ █ █ █▄▄ █▀▀   █ █ ▄▀█ █▀ █ █", "▀▄▀ █ █▄█ ██▄   █▀█ █▀█ ▄█ █▀█"];
-const BAND = 7, TOP = 2, MID = 3, LOW = 4;
 const PH: [string, number][] = [["register", 4], ["compute", 16], ["reveal", 5], ["verify", 7]];
 
-function noise(x: number, y: number): number {
-  let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) >>> 0;
-  n = Math.imul((n ^ (n >>> 13)) >>> 0, 1274126177) >>> 0;
-  return (n ^ (n >>> 16)) >>> 0;
-}
-const lampDist = (x: number) => { const m = (((x - 6) % 24) + 24) % 24; return Math.min(m, 24 - m); };
-const litBy = (d: number) => (d <= 3 ? 0 : d <= 7 ? 1 : 2);
-const layerAt = (x: number, r: number) => (r + (noise(Math.floor(x / 9), 99) % 3) + (noise(Math.floor(x / 4), r) % 7 === 0 ? 1 : 0)) % 5;
 const int = (n: number) => Math.round(n).toLocaleString("en-US");
 const vibe = (v: number, sign = false) => (sign && v >= 0 ? "+" : "") + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " VIBE";
 const nn = (c: number, noun: string) => c.toLocaleString("en-US") + " " + noun + (c === 1 ? "" : "s");
@@ -37,30 +17,31 @@ function si(n: number, unit: string): string {
 }
 const escText = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string);
 
+/** The banner as pixels: each line of half-blocks is two rows, coloured gold to violet left to right. */
+export function drawBanner(svg: SVGSVGElement, id = "tgrad") {
+  const w = BANNER[0].length, out: string[] = [];
+  svg.setAttribute("viewBox", `0 0 ${w} 4`);
+  out.push(`<defs><linearGradient id="${id}" x1="0" x2="${w}" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffcd3c"/><stop offset=".35" stop-color="#ff9646"/><stop offset=".68" stop-color="#ff5f96"/><stop offset="1" stop-color="#b46eff"/></linearGradient></defs><g fill="url(#${id})">`);
+  BANNER.forEach((line, li) => {
+    for (let j = 0; j < line.length; j++) {
+      const ch = line[j];
+      if (ch === "█" || ch === "▀") out.push(`<rect x="${j}" y="${li * 2}" width="1.02" height="1.02"/>`);
+      if (ch === "█" || ch === "▄") out.push(`<rect x="${j}" y="${li * 2 + 1}" width="1.02" height="1.02"/>`);
+    }
+  });
+  svg.innerHTML = out.join("") + "</g>";
+}
+
 export interface TerminalHandle { sync(net: Network): void; stop(): void }
 
 /** Start the dashboard inside `root`, which holds the elements marked data-t="…" (see components/Terminal.tsx). */
 export function startTerminal(root: HTMLElement): TerminalHandle {
   const q = <T extends Element>(k: string) => root.querySelector(`[data-t="${k}"]`) as T;
   const screen = q<HTMLElement>("screen"), boot = q<HTMLElement>("boot"), dash = q<HTMLElement>("dash");
-  const canvas = q<HTMLCanvasElement>("mine"), ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
   const linesEl = q<HTMLElement>("lines"), probe = q<HTMLElement>("probe");
   const still = !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
-  // The banner, as pixels: each line of half-blocks is two rows, coloured gold to violet left to right.
-  {
-    const svg = q<SVGSVGElement>("banner"), w = BANNER[0].length, out: string[] = [];
-    svg.setAttribute("viewBox", `0 0 ${w} 4`);
-    out.push(`<defs><linearGradient id="tgrad" x1="0" x2="${w}" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffcd3c"/><stop offset=".35" stop-color="#ff9646"/><stop offset=".68" stop-color="#ff5f96"/><stop offset="1" stop-color="#b46eff"/></linearGradient></defs><g fill="url(#tgrad)">`);
-    BANNER.forEach((line, li) => {
-      for (let j = 0; j < line.length; j++) {
-        const ch = line[j];
-        if (ch === "█" || ch === "▀") out.push(`<rect x="${j}" y="${li * 2}" width="1.02" height="1.02"/>`);
-        if (ch === "█" || ch === "▄") out.push(`<rect x="${j}" y="${li * 2 + 1}" width="1.02" height="1.02"/>`);
-      }
-    });
-    svg.innerHTML = out.join("") + "</g>";
-  }
+  const mine = new MineScene(q<HTMLCanvasElement>("mine"), still);
+  drawBanner(q<SVGSVGElement>("banner"));
   let hex = "";
   for (let i = 0; i < 36; i++) hex += "0123456789abcdef"[(Math.random() * 16) | 0];
   const ADDR = "vibe1" + hex;
@@ -70,8 +51,8 @@ export function startTerminal(root: HTMLElement): TerminalHandle {
   const S = {
     clock: 0, round: 213, height: 212, live: null as number | null, ph: 0, t0: -1,
     assigned: 0, trained: 0, committed: 0, checked: 0, units: 75, checks: 35, rounds: 13, flops: 5.65e12,
-    wallet: 31.58, shownWallet: 31.58, stake: 5, earned: 36.58, shownEarned: 36.58, rep: 0.91, scroll: 0,
-    popup: null as [number, number] | null, feed: [] as [Date, string, string][], gen: 40, reward: 51.2, jobs: ["fruit-demo", "evo2-c1-mix"]
+    wallet: 31.58, shownWallet: 31.58, stake: 5, earned: 36.58, shownEarned: 36.58, rep: 0.91,
+    feed: [] as [Date, string, string][], gen: 40, reward: 51.2, jobs: ["fruit-demo", "evo2-c1-mix"]
   };
   // Jobs take turns, one round each: this rig alternates a small classifier and an Evo Hash job.
   const job = (): [string, string] => (S.round % 2 ? ["evo2-c1-mix", "Evo Hash · Qwen2.5-0.5B"] : ["fruit-demo", "17,925 float32 weights"]);
@@ -98,7 +79,6 @@ export function startTerminal(root: HTMLElement): TerminalHandle {
       if (ck > S.checked) { S.checks += ck - S.checked; S.checked = ck; }
     }
     if (e >= PH[S.ph][1]) endPhase();
-    S.scroll += dt * (still ? 0 : training() ? 12 : busy() ? 4.2 : 0);
     const k = Math.min(1, dt * 2.5);
     S.shownWallet += (S.wallet - S.shownWallet) * k;
     S.shownEarned += (S.earned - S.shownEarned) * k;
@@ -116,7 +96,7 @@ export function startTerminal(root: HTMLElement): TerminalHandle {
       } else note("round " + S.round + ": checked 2 results, both agree");
       const pay = Math.round((2.7 + Math.random() * 0.9) * 100) / 100;
       S.wallet += pay; S.earned += pay; S.rounds++; S.rep = Math.min(0.99, S.rep + 0.004);
-      S.popup = [S.clock, pay]; coinBurst();
+      mine.celebrate(vibe(pay, true));
       note("paid " + vibe(pay, true) + " in block " + S.height, "c-gold");
       S.round++;
       if (S.live && S.live + 1 > S.round) { S.round = S.live + 1; S.height = S.live; }
@@ -127,183 +107,15 @@ export function startTerminal(root: HTMLElement): TerminalHandle {
   }
 
   // ---- layout: font size, cell size, columns ----
-  let fs = 13, cw = 7.8, lh = 20.8, cols = 70, dx = 31, cssW = 0, cssH = 0, dpr = 1, lastHTML = "";
+  let cols = 70, lastHTML = "";
   function layout() {
     const cs = getComputedStyle(screen), avail = screen.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    fs = Math.max(9.5, Math.min(13.5, avail / (48 * 0.6)));
+    const fs = Math.max(9.5, Math.min(13.5, avail / (48 * 0.6)));
     screen.style.fontSize = fs + "px";
-    cw = probe.getBoundingClientRect().width / 20 || fs * 0.6;
-    lh = fs * 1.6;
+    const cw = probe.getBoundingClientRect().width / 20 || fs * 0.6;
     cols = Math.max(40, Math.floor(avail / cw));
-    dx = Math.max(16, Math.floor(cols * 0.45));
-    dpr = Math.min(2, window.devicePixelRatio || 1);
-    cssW = cols * cw; cssH = BAND * lh;
-    canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
-    canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    mine.resize(cols, cw, fs * 1.6, fs);
     lastHTML = "";
-  }
-
-  // ---- particles ----
-  let parts: Spark[] = [], coins: Coin[] = [];
-  function coinBurst() {
-    if (still) return;
-    for (let i = 0; i < 14; i++) coins.push({ x: (dx + 0.5) * cw, y: MID * lh, vx: -40 - Math.random() * 170, vy: -170 - Math.random() * 150, t: 0, life: 2.4, ph: Math.random() * 6 });
-  }
-  function emit(dt: number) {
-    if (still || !busy()) return;
-    let n = (training() ? 55 : 18) * dt;
-    while (n > 0) {
-      if (n < 1 && Math.random() > n) break;
-      n -= 1;
-      parts.push({ x: (dx + 1) * cw - 2, y: (MID + 0.5) * lh + (Math.random() - 0.5) * lh * 1.4, vx: -30 - Math.random() * 150, vy: -150 + Math.random() * 190, t: 0, life: 0.25 + Math.random() * 0.55, c: SPARKS[(Math.random() * 4) | 0] });
-    }
-  }
-  function stepParts(dt: number) {
-    const railY = (LOW + 0.5) * lh - 3;
-    parts = parts.filter((p) => { p.t += dt; p.vy += 520 * dt; p.x += p.vx * dt; p.y += p.vy * dt; return p.t < p.life; });
-    coins = coins.filter((c) => {
-      c.t += dt; c.vy += 640 * dt; c.x += c.vx * dt; c.y += c.vy * dt;
-      if (c.y > railY - 4 && c.vy > 0) { c.y = railY - 4; c.vy *= -0.42; c.vx *= 0.7; }
-      return c.t < c.life;
-    });
-  }
-  function diamond(x: number, y: number, r: number, color: string, glow: number) {
-    ctx.save(); ctx.fillStyle = color;
-    if (glow) { ctx.shadowColor = color; ctx.shadowBlur = glow; }
-    ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r * 0.72, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r * 0.72, y); ctx.closePath(); ctx.fill();
-    ctx.restore();
-  }
-
-  // ---- the mine: minerui._band cell for cell, with the upgrades on top ----
-  function drawBand() {
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, cssW, cssH);
-    const off = Math.floor(S.scroll), frac = S.scroll - off, face = (dx + 1) * cw, f = still ? 0 : Math.floor(S.clock * 12), isBusy = busy();
-    // Already mined, left of the drill: rock above and below a timbered tunnel, lit by lanterns.
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, face, cssH); ctx.clip();
-    const lamps: number[] = [];
-    for (let c = 0; c <= cols + 1; c++) {
-      const x = off + c, px = (c - frac) * cw;
-      if (px > face) break;
-      const ld = lampDist(x), lit = litBy(ld);
-      for (let r = 0; r < BAND; r++) {
-        if (r >= TOP && r <= LOW) continue;
-        if (r === TOP - 1 && (x % 12 === 11 || x % 12 === 0 || x % 12 === 1)) continue;
-        const v = noise(x, r) % 100;
-        ctx.fillStyle = ROCK[layerAt(x, r)][lit][v < 60 ? 0 : v < 88 ? 1 : 2];
-        ctx.fillRect(px, r * lh, cw + 0.6, lh + 0.6);
-      }
-      if (x % 12 === 0) { // pit props, and the beam over them
-        ctx.fillStyle = TIMBER;
-        ctx.fillRect(px + cw * 0.18, (TOP - 0.35) * lh, cw * 0.2, 2.85 * lh - 4);
-        ctx.fillRect(px + cw * 0.62, (TOP - 0.35) * lh, cw * 0.2, 2.85 * lh - 4);
-        ctx.fillRect(px - cw, (TOP - 0.42) * lh, cw * 3, lh * 0.16);
-        ctx.fillRect(px - cw, (TOP - 0.2) * lh, cw * 3, lh * 0.12);
-      }
-      if (ld === 0) lamps.push(px + cw / 2);
-    }
-    const ry = (LOW + 0.5) * lh;
-    for (let c = 0; c <= cols + 1; c++) {
-      const x = off + c, px = (c - frac) * cw;
-      if (px > face) break;
-      if (x % 4 === 0) { ctx.fillStyle = TIE; ctx.fillRect(px + cw / 2 - 1.5, ry - 6, 3, 12); }
-    }
-    ctx.fillStyle = RAIL; ctx.fillRect(0, ry - 3, face, 1.5); ctx.fillRect(0, ry + 1.5, face, 1.5);
-    for (const lx of lamps) {
-      const fl = still ? 1 : 0.9 + 0.1 * Math.sin(S.clock * 9 + lx * 0.37);
-      const g = ctx.createRadialGradient(lx, (TOP + 0.4) * lh, 0, lx, (TOP + 0.4) * lh, cw * 5);
-      g.addColorStop(0, `rgba(255,214,120,${0.28 * fl})`); g.addColorStop(1, "rgba(255,214,120,0)");
-      ctx.fillStyle = g; ctx.fillRect(lx - cw * 5, (TOP - 1) * lh, cw * 10, lh * 3.5);
-      ctx.save(); ctx.fillStyle = rgb(LAMP); ctx.shadowColor = rgb(LAMP); ctx.shadowBlur = 10 * fl;
-      ctx.fillRect(lx - 0.5, TOP * lh, 1, lh * 0.18); ctx.fillRect(lx - cw * 0.28, TOP * lh + lh * 0.18, cw * 0.56, lh * 0.36);
-      ctx.restore();
-    }
-    ctx.restore();
-
-    // Not mined yet, right of the drill: solid rock with ore in it.
-    ctx.save(); ctx.beginPath(); ctx.rect(face, 0, cssW - face, cssH); ctx.clip();
-    for (let c = Math.max(0, dx - 1); c <= cols + 1; c++) {
-      const x = off + c, px = (c - frac) * cw;
-      if (px + cw < face) continue;
-      for (let r = 0; r < BAND; r++) {
-        const v = noise(x, r) % 100;
-        if (v < (r >= TOP && r <= LOW ? 4 : 1)) { diamond(px + cw / 2, r * lh + lh / 2, lh * 0.26, GOLD, 6); continue; }
-        ctx.fillStyle = ROCK[layerAt(x, r)][1][v < 60 ? 0 : v < 88 ? 1 : 2];
-        ctx.fillRect(px, r * lh, cw + 0.6, lh + 0.6);
-      }
-    }
-    if (isBusy && !still) {
-      const fg = ctx.createLinearGradient(face, 0, face + cw * 4, 0);
-      fg.addColorStop(0, "rgba(255,190,90,0.28)"); fg.addColorStop(1, "rgba(255,190,90,0)");
-      ctx.fillStyle = fg; ctx.fillRect(face, (TOP - 0.5) * lh, cw * 4, lh * 4);
-    }
-    ctx.restore();
-
-    // The ore cart: one nugget per unit committed this round, on wheels that roll with the tunnel.
-    const cx = dx - 13;
-    ctx.fillStyle = CART;
-    ctx.fillRect((cx + 0.5) * cw, MID * lh + lh * 0.08, cw * 0.5, lh * 0.92);
-    ctx.fillRect((cx + 5) * cw, MID * lh + lh * 0.08, cw * 0.5, lh * 0.92);
-    ctx.fillRect((cx + 0.5) * cw, (MID + 1) * lh - 3, cw * 5, 3);
-    for (let k = 0; k < 4; k++) {
-      const ox = (cx + 1 + k) * cw + cw / 2, oy = MID * lh + lh * 0.55;
-      if (k < Math.min(S.committed, 4)) diamond(ox, oy, lh * 0.27, GOLD, 8);
-      else { ctx.fillStyle = DIMC; ctx.fillRect(ox - 1, oy - 1, 2, 2); }
-    }
-    ctx.fillStyle = RAIL; ctx.fillRect((cx + 5.5) * cw, MID * lh + lh * 0.5 - 0.75, cw * 3.5, 1.5);
-    const wr = Math.min(cw * 0.95, lh * 0.36), wy = ry - 3 - wr, ang = (S.scroll * cw) / wr;
-    for (const wc of [cx + 1.5, cx + 4.5]) {
-      ctx.save(); ctx.translate(wc * cw, wy);
-      ctx.fillStyle = "#0a0908"; ctx.strokeStyle = TEXTC; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(0, 0, wr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.rotate(ang); ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(-wr, 0); ctx.lineTo(wr, 0); ctx.moveTo(0, -wr); ctx.lineTo(0, wr); ctx.stroke();
-      ctx.restore();
-    }
-
-    // The drill: a body whose stripes turn while it works, and a spinning tip.
-    const bx = (dx - 4) * cw, by = (TOP + 0.5) * lh, bw = 4 * cw, bh = 2 * lh;
-    const bg = ctx.createLinearGradient(0, by, 0, by + bh);
-    bg.addColorStop(0, "rgb(150,225,255)"); bg.addColorStop(0.45, "rgb(80,200,255)"); bg.addColorStop(1, "rgb(40,140,200)");
-    ctx.save();
-    if (isBusy && !still) { ctx.shadowColor = "rgba(80,200,255,0.6)"; ctx.shadowBlur = 16; }
-    ctx.fillStyle = bg; ctx.fillRect(bx, by, bw, bh); ctx.restore();
-    for (let s = 0; s < 4; s++) if ((s + (isBusy ? f : 0)) % 3 === 0) { ctx.fillStyle = "rgba(20,70,110,0.75)"; ctx.fillRect(bx + s * cw, MID * lh, cw, lh); }
-    ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.fillRect(bx, by, bw, 1.5);
-    const tx = dx * cw, ty = (MID + 0.5) * lh, th = lh * 1.25;
-    const tipPath = () => { ctx.beginPath(); ctx.moveTo(tx, ty - th / 2); ctx.lineTo(tx + cw, ty); ctx.lineTo(tx, ty + th / 2); ctx.closePath(); };
-    ctx.save();
-    if (isBusy && !still) { ctx.shadowColor = "rgb(225,245,255)"; ctx.shadowBlur = 14; }
-    ctx.fillStyle = isBusy ? "rgb(225,245,255)" : "rgb(80,200,255)"; tipPath(); ctx.fill(); ctx.restore();
-    ctx.save(); tipPath(); ctx.clip(); ctx.strokeStyle = "rgba(30,90,130,0.7)"; ctx.lineWidth = 1.2;
-    const sp = isBusy && !still ? (S.clock * 30) % 6 : 0;
-    for (let q2 = -12; q2 < 12; q2 += 6) { ctx.beginPath(); ctx.moveTo(tx + q2 + sp, ty - th / 2); ctx.lineTo(tx + q2 + sp + 6, ty + th / 2); ctx.stroke(); }
-    ctx.restore();
-
-    // Sparks off the rock face, gold coins after a payout, and the payout itself.
-    ctx.save(); ctx.globalCompositeOperation = "lighter";
-    for (const p of parts) {
-      ctx.strokeStyle = `rgba(${p.c[0]},${p.c[1]},${p.c[2]},${1 - p.t / p.life})`; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 0.025, p.y - p.vy * 0.025); ctx.stroke();
-    }
-    ctx.restore();
-    for (const c of coins) {
-      const rr = lh * 0.2;
-      ctx.save(); ctx.globalAlpha = Math.min(1, (c.life - c.t) / 0.6); ctx.translate(c.x, c.y);
-      ctx.scale(Math.max(0.15, Math.abs(Math.cos(c.t * 9 + c.ph))), 1);
-      ctx.fillStyle = GOLD; ctx.shadowColor = GOLD; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(0, 0, rr, 0, Math.PI * 2); ctx.fill();
-      ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,250,220,0.8)"; ctx.beginPath(); ctx.arc(-rr * 0.3, -rr * 0.3, rr * 0.35, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    }
-    if (S.popup && S.clock - S.popup[0] < 2.5) {
-      const label = " " + vibe(S.popup[1], true) + " ", age = S.clock - S.popup[0];
-      const lx = Math.max(0, (dx - Math.floor(label.length / 2)) * cw), rise = still ? 1 : Math.min(1, age * 4);
-      ctx.save(); ctx.globalAlpha = Math.min(1, (2.5 - age) / 0.5);
-      ctx.fillStyle = "#0a0908"; ctx.fillRect(lx, 0, label.length * cw, lh);
-      ctx.font = `700 ${fs}px 'JetBrains Mono', Consolas, monospace`; ctx.textBaseline = "middle";
-      ctx.fillStyle = GOLD; ctx.shadowColor = GOLD; ctx.shadowBlur = 10;
-      ctx.fillText(label, lx, lh * 0.5 + (1 - rise) * 6); ctx.restore();
-    }
   }
 
   // ---- the lines under the mine (minerui.frame) ----
@@ -350,6 +162,7 @@ export function startTerminal(root: HTMLElement): TerminalHandle {
     const out = L.map(html).join("\n");
     if (out !== lastHTML) { linesEl.innerHTML = out; lastHTML = out; }
   }
+  const drawMine = (dt: number) => mine.frame(dt, { busy: busy(), speed: training() ? 12 : busy() ? 4.2 : 0, committed: S.committed });
 
   // ---- boot: what happens before the dashboard (device check, node handshake, wallet) ----
   const BOOT: [string, string, string, string, number][] = [
@@ -385,15 +198,15 @@ export function startTerminal(root: HTMLElement): TerminalHandle {
     last = ts;
     if (!bootDone) { bootT += dt; drawBoot(); }
     else if (still) {
-      if (Math.floor(S.clock + dt) !== Math.floor(S.clock) || !lastHTML) { advance(dt); drawBand(); drawLines(); } else S.clock += dt;
-    } else { advance(dt); emit(dt); stepParts(dt); drawBand(); drawLines(); }
+      if (Math.floor(S.clock + dt) !== Math.floor(S.clock) || !lastHTML) { advance(dt); drawMine(0); drawLines(); } else S.clock += dt;
+    } else { advance(dt); drawMine(dt); drawLines(); }
     if (visible && !document.hidden && !stopped) raf = requestAnimationFrame(frame); else last = 0;
   }
   const kick = () => { if (!raf && visible && !document.hidden && !stopped) { last = 0; raf = requestAnimationFrame(frame); } };
   const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => { visible = es[0].isIntersecting; kick(); }) : null;
   io?.observe(root);
   document.addEventListener("visibilitychange", kick);
-  const relayout = () => { if (bootDone && !stopped) { layout(); if (still) { drawBand(); drawLines(); } } };
+  const relayout = () => { if (bootDone && !stopped) { layout(); if (still) { drawMine(0); drawLines(); } } };
   const ro = "ResizeObserver" in window ? new ResizeObserver(relayout) : null;
   ro?.observe(screen);
   document.fonts?.ready.then(relayout);
